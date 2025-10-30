@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinity Group VTC Portalı</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* Custom Stiller ve Geliştirmeler - Eternal Transport Benzeri Tasarım */
+        :root {
+            --bg-primary: #0f172a; /* Slate 900 */
+            --bg-secondary: #1e293b; /* Slate 800 */
+            --border-color: #334155; /* Slate 700 */
+            --text-primary: #f8fafc; /* Slate 50 */
+            --text-secondary: #94a3b8; /* Slate 400 */
+            --accent-primary: #38bdf8; /* Sky 400 */
+            --accent-secondary: #0ea5e9; /* Sky 500 */
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        /* Header Stilleri */
+        .header {
+            transition: background-color 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out;
+        }
+        .header-scrolled {
+            background-color: rgba(15, 23, 42, 0.85); /* Slate 900 with opacity */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Hero Section Stilleri */
+        .hero-section {
+             background-image: linear-gradient(to top, rgba(15, 23, 42, 1) 15%, rgba(15, 23, 42, 0.6) 60%), url('https://i.ibb.co/xKJDmL3w/Murat-Can-Tekin-500-x-500-piksel-5.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Kart ve Buton Stilleri */
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.1); /* Sky 400 */
+        }
+        .btn-primary {
+            background-color: var(--accent-secondary);
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: var(--accent-primary);
+        }
+         .btn-outline {
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .btn-outline:hover {
+             background-color: var(--accent-primary);
+             color: white;
+        }
+         .btn-lang {
+             background-color: var(--bg-secondary);
+             border: 1px solid var(--border-color);
+             color: var(--text-secondary);
+             transition: all 0.2s ease;
+         }
+         .btn-lang.active, .btn-lang:hover {
+             background-color: var(--accent-primary);
+             border-color: var(--accent-primary);
+             color: white;
+         }
+
+
+        /* Animasyonlar ve Sayfa Yönetimi */
+        .page-content { display: none; }
+        .page-content.active { display: block; animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Aktif Navigasyon Linki */
+        .nav-link.active { color: var(--accent-primary); }
+        
+        /* Yasal Metin Stilleri */
+        .content-prose h3 {
+            font-size: 1.5rem; font-weight: 700; color: var(--text-primary);
+            margin-top: 2rem; margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;
+        }
+        .content-prose p { line-height: 1.75; margin-bottom: 1rem; color: var(--text-secondary); }
+        .content-prose img { max-width: 100%; border-radius: 0.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+        .content-prose a { color: var(--accent-primary); text-decoration: underline; }
+
+        /* Modal Stilleri */
+        .modal-overlay { transition: opacity 0.3s ease; backdrop-filter: blur(5px); }
+        .modal-content { transition: transform 0.3s ease; background-color: var(--bg-secondary); border: 1px solid var(--border-color); }
+
+        /* Slot Styling */
+        .slot {
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            /* min-height kaldırıldı, JS'den dinamik olarak (h-20 veya h-32) atanacak */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+        }
+        .slot.empty { background-color: rgba(51, 65, 85, 0.3); /* Slate 700 */ }
+        .slot.empty:hover { background-color: rgba(56, 189, 248, 0.2); border-color: var(--accent-primary); cursor: pointer; }
+        .slot.taken { background-color: var(--accent-primary); color: white; cursor: default; } /* Default cursor for taken */
+        .slot.admin-edit.taken { cursor: pointer; } /* Admin override for pointer */
+        .slot.admin-edit.taken:hover { background-color: rgba(239, 68, 68, 0.3) !important; border-color: #ef4444 !important; } /* Admin override */
+        
+        .slot-tooltip {
+            visibility: hidden; opacity: 0; transition: opacity 0.2s;
+            position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+            white-space: nowrap; z-index: 10;
+        }
+        .slot:hover .slot-tooltip { visibility: visible; opacity: 1; }
+        
+        .slot .fa-truck { color: rgba(255, 255, 255, 0.7); } /* Kamyon ikonu rengi */
+
+    </style>
+</head>
+<body class="antialiased">
+    <header id="header" class="header fixed top-0 left-0 right-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#anasayfa" onclick="App.navigate('anasayfa', this)" class="flex items-center gap-3">
+                <img src="https://i.ibb.co/S4sNRsSV/Murat-Can-Tekin-500-x-500-piksel-4.png" alt="Infinity Group Logo" class="h-10 w-auto">
+                <span class="text-xl font-bold text-white hidden sm:block">Infinity Group</span>
+            </a>
+            <div class="hidden md:flex items-center space-x-6 lg:space-x-8">
+                <a href="#anasayfa" onclick="App.navigate('anasayfa', this)" class="nav-link text-text-secondary hover:text-white font-medium transition-colors active" data-translate="navHome">Ana Sayfa</a>
+                <a href="#haberler" onclick="App.navigate('haberler', this)" class="nav-link text-text-secondary hover:text-white font-medium transition-colors" data-translate="navNews">Haberler</a>
+                <a href="#konvoylar" onclick="App.navigate('konvoylar', this)" class="nav-link text-text-secondary hover:text-white font-medium transition-colors" data-translate="navConvoys">Konvoylar</a>
+                <a href="#ekibimiz" onclick="App.navigate('ekibimiz', this)" class="nav-link text-text-secondary hover:text-white font-medium transition-colors" data-translate="navTeam">Ekibimiz</a>
+                <a href="#galeri" onclick="App.navigate('galeri', this)" class="nav-link text-text-secondary hover:text-white font-medium transition-colors" data-translate="navGallery">Galeri</a>
+                <a href="#yasal" onclick="App.navigate('yasal', this)" class="nav-link text-text-secondary hover:text-white font-medium transition-colors" data-translate="navLegal">Yasal</a>
+                <a href="#admin" id="admin-nav-link" style="display: none;" onclick="App.navigate('admin', this)" class="nav-link text-red-400 hover:text-red-300 font-medium transition-colors" data-translate="navAdmin">Admin</a>
+            </div>
+            <div class="hidden md:flex items-center gap-4">
+                 <div class="flex gap-2">
+                     <button onclick="App.language.set('tr')" id="lang-tr" class="btn-lang active px-3 py-1 rounded-md text-sm font-semibold">TR</button>
+                     <button onclick="App.language.set('en')" id="lang-en" class="btn-lang px-3 py-1 rounded-md text-sm font-semibold">EN</button>
+                 </div>
+                <a href="#basvuru" onclick="App.navigate('basvuru', this)" class="btn-primary text-white font-bold py-2 px-5 rounded-lg" data-translate="applyNow">
+                    Başvuru Yap
+                </a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-white">
+                <i class="fas fa-bars fa-2x"></i>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pt-2 pb-4 space-y-3 header-scrolled">
+             <a href="#anasayfa" onclick="App.navigate('anasayfa', this); closeMobileMenu()" class="nav-link block py-2 text-text-secondary hover:text-white font-medium" data-translate="navHome">Ana Sayfa</a>
+             <a href="#haberler" onclick="App.navigate('haberler', this); closeMobileMenu()" class="nav-link block py-2 text-text-secondary hover:text-white font-medium" data-translate="navNews">Haberler</a>
+             <a href="#konvoylar" onclick="App.navigate('konvoylar', this); closeMobileMenu()" class="nav-link block py-2 text-text-secondary hover:text-white font-medium" data-translate="navConvoys">Konvoylar</a>
+             <a href="#ekibimiz" onclick="App.navigate('ekibimiz', this); closeMobileMenu()" class="nav-link block py-2 text-text-secondary hover:text-white font-medium" data-translate="navTeam">Ekibimiz</a>
+             <a href="#galeri" onclick="App.navigate('galeri', this); closeMobileMenu()" class="nav-link block py-2 text-text-secondary hover:text-white font-medium" data-translate="navGallery">Galeri</a>
+             <a href="#yasal" onclick="App.navigate('yasal', this); closeMobileMenu()" class="nav-link block py-2 text-text-secondary hover:text-white font-medium" data-translate="navLegal">Yasal</a>
+             <a href="#admin" id="admin-mobile-nav-link" style="display: none;" onclick="App.navigate('admin', this); closeMobileMenu()" class="nav-link block py-2 text-red-400 hover:text-red-300 font-medium" data-translate="navAdmin">Admin</a>
+             <a href="#basvuru" onclick="App.navigate('basvuru', this); closeMobileMenu()" class="block mt-2 btn-primary text-white font-bold py-2 px-4 rounded-lg transition duration-300 text-center" data-translate="applyNow">Başvuru Yap</a>
+             <div class="flex justify-center gap-2 mt-4">
+                 <button onclick="App.language.set('tr')" id="lang-mobile-tr" class="btn-lang active px-3 py-1 rounded-md text-sm font-semibold">TR</button>
+                 <button onclick="App.language.set('en')" id="lang-mobile-en" class="btn-lang px-3 py-1 rounded-md text-sm font-semibold">EN</button>
+             </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="anasayfa" class="page-content active">
+            <div class="hero-section h-screen flex items-center justify-center text-center">
+                <div>
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight leading-tight" data-translate="heroTitle">Their dream is our standard.</h1>
+                    <p class="mt-4 text-lg text-text-secondary max-w-2xl mx-auto" data-translate="heroSubtitle">TruckersMP'nin en profesyonel ve samimi topluluğuna katılarak sanal lojistik deneyiminizi bir üst seviyeye taşıyın.</p>
+                    <div class="mt-8 flex justify-center gap-4">
+                        <a href="#basvuru" onclick="App.navigate('basvuru', document.querySelector('a[href=\'#basvuru\']'))" class="btn-primary text-white font-bold py-3 px-8 rounded-lg text-lg" data-translate="joinUs">
+                            Hemen Katıl
+                        </a>
+                         <a href="#konvoylar" onclick="App.navigate('konvoylar', document.querySelector('a[href=\'#konvoylar\']'))" class="btn-outline font-bold py-3 px-8 rounded-lg text-lg" data-translate="seeConvoys">
+                            Konvoyları Gör
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container mx-auto px-6 py-24">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="pr-0 md:pr-12">
+                        <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight" data-translate="aboutTitle">Biz Kimiz?</h2>
+                        <p class="mt-4 text-lg text-text-secondary leading-relaxed" data-translate="aboutText">
+                            Iиfıиıтч Gяσuρ® 20.09.2025 tarihinde temelleri atılmış ve bugün profesyonel bir şekilde yönetilmektedir. Euro Truck Simulator 2 odaklı bir topluluk olup, faaliyetlerini düzenli ve istikrarlı şekilde sürdürmektedir.
+                        </p>
+                    </div>
+                    <div>
+                        <img src="https://images.unsplash.com/photo-1616845399432-11cf71b80a27?q=80&w=2500&auto=format&fit=crop" class="rounded-xl shadow-2xl w-full" alt="Kamyon konvoyu">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-bg-secondary py-24">
+                <div class="container mx-auto px-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                        <div>
+                            <p id="stats-drivers" class="text-5xl font-extrabold text-white" data-target="0">0</p>
+                            <p class="mt-2 text-text-secondary font-medium" data-translate="statsDrivers">Toplam Sürücü</p>
+                        </div>
+                        <div>
+                            <p id="stats-convoys" class="text-5xl font-extrabold text-white" data-target="0">0</p>
+                            <p class="mt-2 text-text-secondary font-medium" data-translate="statsConvoys">Yaklaşan Konvoy</p>
+                        </div>
+                        <div>
+                            <p id="stats-discord" class="text-5xl font-extrabold text-white" data-target="0">0</p>
+                            <p class="mt-2 text-text-secondary font-medium" data-translate="statsDiscord">Discord Üyesi</p>
+                        </div>
+                         <div>
+                            <p class="text-5xl font-extrabold text-white">2025</p>
+                            <p class="mt-2 text-text-secondary font-medium" data-translate="statsFounded">Kuruluş</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <div id="latest-news-homepage" class="container mx-auto px-6 py-24">
+                 </div>
+             <section class="container mx-auto px-6 pb-24">
+                <div class="bg-gradient-to-r from-sky-500 to-sky-700 rounded-xl p-8 md:p-12 text-center text-white">
+                     <h2 class="text-3xl md:text-4xl font-bold tracking-tight" data-translate="ctaTitle">Aramıza Katılmaya Hazır mısın?</h2>
+                     <p class="mt-4 text-lg text-sky-100 max-w-2xl mx-auto" data-translate="ctaSubtitle">Ekibimizin bir parçası olmak ve bu heyecana ortak olmak için başvuru sayfamızı ziyaret et.</p>
+                     <div class="mt-8">
+                         <a href="#basvuru" onclick="App.navigate('basvuru', document.querySelector('a[href=\'#basvuru\']'))" class="bg-white text-sky-600 hover:bg-sky-50 font-bold py-3 px-8 rounded-lg text-lg inline-block transition-colors" data-translate="ctaButton">
+                             Başvuru Sayfasına Git
+                        </a>
+                     </div>
+                </div>
+            </section>
+        </section>
+
+        <section id="haberler" class="page-content container mx-auto px-6 py-24 min-h-screen">
+             <div class="text-center mb-16 pt-16">
+                 <h2 class="text-4xl font-bold text-white tracking-tight" data-translate="newsTitle">VTC Haberleri</h2>
+                 <p class="mt-4 text-lg text-text-secondary max-w-3xl mx-auto" data-translate="newsSubtitle">Ekibimizden en son duyurular ve gelişmeler.</p>
+            </div>
+            <div id="news-list" class="space-y-8 max-w-4xl mx-auto">
+                <div class="text-center text-text-secondary"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2" data-translate="loadingNews">Haberler yükleniyor...</p></div>
+            </div>
+        </section>
+
+        <section id="konvoylar" class="page-content container mx-auto px-6 py-24 min-h-screen">
+             <div class="text-center mb-16 pt-16">
+                 <h2 class="text-4xl font-bold text-white tracking-tight" data-translate="convoysTitle">Yaklaşan Konvoylar</h2>
+                 <p class="mt-4 text-lg text-text-secondary max-w-3xl mx-auto" data-translate="convoysSubtitle">Gelecek maceralarımız için takviminizi işaretleyin.</p>
+            </div>
+            <div id="convoy-list" class="space-y-16">
+                 <div class="text-center text-text-secondary"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2" data-translate="loadingConvoys">Konvoylar yükleniyor...</p></div>
+            </div>
+        </section>
+        
+        <section id="ekibimiz" class="page-content container mx-auto px-6 py-24 min-h-screen">
+            <div class="text-center mb-16 pt-16">
+                <h2 class="text-4xl font-bold text-white tracking-tight" data-translate="teamTitle">Ekibimiz</h2>
+                <p class="mt-4 text-lg text-text-secondary max-w-3xl mx-auto" data-translate="teamSubtitle">Infinity Group'u oluşturan harika insanlar.</p>
+            </div>
+            <div id="member-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                 <div class="col-span-full text-center text-text-secondary"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2" data-translate="loadingTeam">Ekip listesi yükleniyor...</p></div>
+            </div>
+        </section>
+        
+        <section id="galeri" class="page-content container mx-auto px-6 py-24 min-h-screen">
+             <div class="text-center mb-16 pt-16">
+                 <h2 class="text-4xl font-bold text-white tracking-tight" data-translate="galleryTitle">Galerimiz</h2>
+                 <p class="mt-4 text-lg text-text-secondary max-w-3xl mx-auto" data-translate="gallerySubtitle">Yollardaki en güzel anlarımızdan birkaçı.</p>
+                 <a href="https://www.instagram.com/infinity.vtc/" target="_blank" class="mt-6 btn-primary text-white font-bold py-3 px-6 rounded-lg inline-flex items-center gap-2">
+                     <i class="fab fa-instagram"></i> <span data-translate="followInstagram">Daha Fazlası İçin Takip Edin</span>
+                 </a>
+            </div>
+            <div class="columns-2 md:columns-3 gap-4 space-y-4">
+                <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop" class="rounded-lg shadow-lg break-inside-avoid" alt="Galeri Fotoğrafı 1">
+                <img src="https://images.unsplash.com/photo-1621418721094-a131a40a5f7e?q=80&w=1974&auto=format&fit=crop" class="rounded-lg shadow-lg break-inside-avoid" alt="Galeri Fotoğrafı 2">
+                <img src="https://images.unsplash.com/photo-1603783038319-c5f35f299052?q=80&w=2070&auto=format&fit=crop" class="rounded-lg shadow-lg break-inside-avoid" alt="Galeri Fotoğrafı 3">
+                <img src="https://images.unsplash.com/photo-1623281121832-3bf9e8a7f72b?q=80&w=1964&auto=format&fit=crop" class="rounded-lg shadow-lg break-inside-avoid" alt="Galeri Fotoğrafı 4">
+                <img src="https://images.unsplash.com/photo-1590228833939-906c5356b27d?q=80&w=1974&auto=format&fit=crop" class="rounded-lg shadow-lg break-inside-avoid" alt="Galeri Fotoğrafı 5">
+                <img src="https://images.unsplash.com/photo-1610414343825-961e6f733c92?q=80&w=2070&auto=format&fit=crop" class="rounded-lg shadow-lg break-inside-avoid" alt="Galeri Fotoğrafı 6">
+            </div>
+        </section>
+
+        <section id="basvuru" class="page-content bg-bg-secondary py-24 min-h-screen flex items-center">
+            <div class="container mx-auto px-6 text-center">
+                 <h2 class="text-4xl font-bold text-white tracking-tight" data-translate="applyTitle">Aramıza Katılmaya Hazır mısın?</h2>
+                 <p class="mt-4 text-lg text-text-secondary max-w-2xl mx-auto" data-translate="applySubtitle">Ekibimizin bir parçası olmak ve bu heyecana ortak olmak için aşağıdaki adımları izlemen yeterli.</p>
+                 <div class="mt-12 max-w-2xl mx-auto text-left card rounded-xl p-8">
+                     <h3 class="text-2xl font-bold text-white mb-6" data-translate="applyStepsTitle">Başvuru Süreci</h3>
+                     <ol class="list-decimal list-inside space-y-4 text-text-secondary text-lg">
+                        <li>
+                             <span class="font-semibold text-text-primary" data-translate="applyStep1.1">Discord'a Katıl:</span> <span data-translate="applyStep1.2">Sunucumuza katılarak ilk adımı at. Burası tüm iletişimimizin merkezi.</span>
+                        </li>
+                        <li>
+                             <span class="font-semibold text-text-primary" data-translate="applyStep2.1">Kuralları Oku:</span> <span data-translate="applyStep2.2">#kurallar kanalını dikkatlice oku ve topluluk standartlarımızı anladığından emin ol.</span>
+                        </li>
+                        <li>
+                             <span class="font-semibold text-text-primary" data-translate="applyStep3.1">Başvuru Yap:</span> <span data-translate="applyStep3.2">#başvuru-yap kanalındaki yönergeleri izleyerek başvuru formunu doldur ve gönder.</span>
+                        </li>
+                         <li>
+                             <span class="font-semibold text-text-primary" data-translate="applyStep4.1">Onay Bekle:</span> <span data-translate="applyStep4.2">Yönetim ekibimiz başvurunu en kısa sürede inceleyecek ve seninle iletişime geçecektir.</span>
+                        </li>
+                     </ol>
+                     <div class="mt-8">
+                         <a href="https://discord.gg/infinitygroup" target="_blank" class="btn-primary text-white font-bold py-3 px-8 rounded-lg text-lg inline-block w-full text-center" data-translate="joinDiscordApply">
+                             Discord'a Katıl ve Başvurunu Başlat
+                        </a>
+                     </div>
+                 </div>
+            </div>
+        </section>
+
+        <section id="yasal" class="page-content container mx-auto px-6 py-24 min-h-screen">
+            <div class="text-center mb-16 pt-16">
+                 <h2 class="text-4xl font-bold text-white tracking-tight" data-translate="legalTitle">Yasal Bilgilendirme</h2>
+                 <p class="mt-4 text-lg text-text-secondary max-w-3xl mx-auto" data-translate="legalSubtitle">Kullanım Koşulları ve Gizlilik Politikamız.</p>
+            </div>
+            <div class="max-w-4xl mx-auto content-prose">
+                <h3 data-translate="termsTitle">Kullanım Koşulları</h3>
+                <p data-translate="termsText">Infinity Group VTC ("biz", "bizim") web sitesini, Discord sunucusunu ve diğer hizmetlerini kullanarak bu kullanım koşullarını kabul etmiş sayılırsınız. Hizmetlerimizi kullanırken TruckersMP kurallarına ve kendi VTC kurallarımıza uymakla yükümlüsünüz. Topluluğa saygısızlık, hile kullanımı veya zarar verici davranışlar VTC'den uzaklaştırılma ile sonuçlanacaktır. Üyeliğinizi herhangi bir zamanda, kendi takdirimize bağlı olarak sonlandırma hakkımızı saklı tutarız.</p>
+                
+                <h3 data-translate="privacyTitle">Gizlilik Politikası</h3>
+                <p data-translate="privacyText">Gizliliğinize önem veriyoruz. Başvuru sırasında sağladığınız kişisel veriler (Discord ID, TruckersMP profili, yaş vb.) yalnızca VTC üyeliğini yönetmek, iletişimi sağlamak ve topluluk içi etkinlikleri düzenlemek amacıyla kullanılır. Bu bilgiler üçüncü taraflarla kesinlikle paylaşılmaz veya satılmaz. Web sitemiz, temel işlevsellik için gerekli olan çerezleri (cookies) kullanabilir. Yönetimle iletişime geçerek kişisel verilerinizin silinmesini talep etme hakkına sahipsiniz.</p>
+
+                <h3 data-translate="botPrivacyTitle">Discord Botu Gizlilik Politikası</h3>
+                <p data-translate="botPrivacyText">Discord sunucumuzda kullanılan özel botumuz, özelliklerini sağlamak ve sunucu moderasyonunu kolaylaştırmak amacıyla herkese açık kullanıcı bilgilerinizi (Kullanıcı ID, kullanıcı adı gibi) ve komut kullanım verilerinizi toplayabilir. Bu veriler güvenli bir şekilde saklanır ve yalnızca VTC'nin iç işleyişi için kullanılır. Bu veriler hiçbir şekilde VTC dışındaki üçüncü taraflarla paylaşılmaz.</p>
+            </div>
+        </section>
+
+         <section id="admin" class="page-content container mx-auto px-6 py-24 min-h-screen">
+            <div class="text-center mb-16 pt-16">
+                 <h2 class="text-4xl font-bold text-white tracking-tight" data-translate="adminTitle">Admin Paneli (Simülasyon)</h2>
+                 <p class="mt-4 text-lg text-text-secondary max-w-3xl mx-auto" data-translate="adminSubtitle">Konvoy Slot Yönetimi</p>
+            </div>
+            <div id="admin-convoy-list" class="space-y-8 max-w-4xl mx-auto">
+                 <div class="text-center text-text-secondary"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2" data-translate="loadingAdminConvoys">Yönetilecek konvoylar yükleniyor...</p></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="border-t border-border-color mt-24">
+        <div class="container mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <img src="https://i.ibb.co/S4sNRsSV/Murat-Can-Tekin-500-x-500-piksel-4.png" alt="Infinity Group Logo" class="h-10 w-auto">
+                        <span class="text-xl font-bold text-white">Infinity Group</span>
+                    </div>
+                    <p class="text-text-secondary max-w-md" data-translate="footerSlogan">"Their dream is our standard."</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4" data-translate="footerSitemap">Site Haritası</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#anasayfa" onclick="App.navigate('anasayfa', this)" class="text-text-secondary hover:text-white" data-translate="navHome">Ana Sayfa</a></li>
+                        <li><a href="#haberler" onclick="App.navigate('haberler', this)" class="text-text-secondary hover:text-white" data-translate="navNews">Haberler</a></li>
+                        <li><a href="#konvoylar" onclick="App.navigate('konvoylar', this)" class="text-text-secondary hover:text-white" data-translate="navConvoys">Konvoylar</a></li>
+                        <li><a href="#ekibimiz" onclick="App.navigate('ekibimiz', this)" class="text-text-secondary hover:text-white" data-translate="navTeam">Ekibimiz</a></li>
+                        <li><a href="#yasal" onclick="App.navigate('yasal', this)" class="text-text-secondary hover:text-white" data-translate="navLegal">Yasal</a></li>
+                         <li id="admin-footer-link" style="display: none;"><a href="#admin" onclick="App.navigate('admin', this)" class="text-red-400 hover:text-red-300" data-translate="navAdmin">Admin</a></li>
+                    </ul>
+                </div>
+                 <div>
+                    <h4 class="text-white font-bold mb-4" data-translate="footerSocial">Sosyal Medya</h4>
+                    <ul class="space-y-2">
+                        <li><a href="https://truckersmp.com/vtc/83171" target="_blank" class="text-text-secondary hover:text-white">TruckersMP</a></li>
+                        <li><a href="https://discord.gg/infinitygroup" target="_blank" class="text-text-secondary hover:text-white">Discord</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 border-t border-border-color pt-6 text-center text-text-secondary">
+                <p>&copy; 2025 Infinity Group VTC. <span data-translate="footerRights">Tüm hakları saklıdır.</span></p>
+            </div>
+        </div>
+    </footer>
+
+     <div id="modal-container"></div>
+
+
+    <script>
+        const App = {
+            state: {
+                bookedSlots: JSON.parse(localStorage.getItem('bookedSlots')) || {}, 
+                currentLang: localStorage.getItem('vtcLang') || 'tr',
+                isAdmin: localStorage.getItem('isAdmin') === 'true', 
+                liveConvoys: [], 
+                liveMembers: { members: [] }, 
+                liveNews: { news: [] }, 
+                liveVtcInfo: null 
+            },
+             fallbackData: {
+                convoys: [
+                    { id: 1, name: 'Yedek: Haftalık Resmi Konvoy', start_at: '2099-10-25T18:00:00Z', banner: 'https://placehold.co/1200x400/1e293b/E6EDF3?text=Konvoy+Afişi', departure: {city: 'Berlin', name: 'LKW'}, arrive: {city: 'Amsterdam', name: 'Stokes'}, server: {name: 'Simulation 1'}, vtc: {id: 83171}, description: 'Haftalık buluşmamız için hazırlanın!', slots_total: 20 },
+                    { id: 2, name: 'Yedek: Partner Konvoyu', start_at: '2099-11-01T18:30:00Z', banner: 'https://placehold.co/1200x400/1e293b/E6EDF3?text=Konvoy+Afişi', departure: {city: 'Oslo', name: 'Polaris Lines'}, arrive: {city: 'Stockholm', name: 'Vitas Power'}, server: {name: 'Simulation 2'}, vtc: {id: 83171}, description: 'Partnerlerimize özel konvoy.', slots_total: 4 }, // Partner konvoyu için 4 slot
+                ],
+                members: {
+                    members: [
+                        { username: 'Kurucu Lider', role: 'Iиf Gяσuρ|Owner', user_id: 1, role_id: 139151 }, 
+                        { username: 'Yardımcı Kurucu', role: 'Iиf Gяσuρ|Co-Founder', user_id: 2, role_id: 139152 },
+                        { username: 'Admin', role: 'Iиf Gяσuρ|Admin', user_id: 5, role_id: 139154 },
+                        { username: 'Usta Sürücü', role: 'Iиf Gяσuρ|Driver', user_id: 3, role_id: 139161 },
+                        { username: 'Acemi Sürücü', role: 'Iиf Gяσuρ|Driver', user_id: 4, role_id: 139161 },
+                    ]
+                },
+                vtc: {
+                    members_count: 75,
+                     ranks: [ // Gerçek rank ID ve order değerleri ile güncelleyin
+                        { id: 139151, name: 'Iиf Gяσuρ|Owner', order: 1 },
+                        { id: 139152, name: 'Iиf Gяσuρ|Co-Founder', order: 2 },
+                        { id: 139153, name: 'Iиf Gяσuρ|H. Admin', order: 3 },
+                        { id: 139154, name: 'Iиf Gяσuρ|Admin', order: 4 },
+                        { id: 139155, name: 'Iиf Gяσuρ|H. Mod', order: 5 },
+                        { id: 139156, name: 'Iиf Gяσuρ|Mod', order: 6 },
+                        { id: 139157, name: 'Iиf Gяσuρ|Trainee Mods', order: 7 },
+                        { id: 139158, name: 'Iиf Gяσuρ|R.M', order: 8 },
+                        { id: 139159, name: 'Iиf Gяσuρ|Media Team', order: 9 },
+                        { id: 139160, name: 'Iиf Gяσuρ|Staff', order: 10 },
+                        { id: 139161, name: 'Iиf Gяσuρ|Driver', order: 11 },
+                    ]
+                },
+                discord: {
+                    approximate_member_count: 150
+                },
+                 news: {
+                    news: [
+                        {id: 1, title: "Yeni Web Sitemiz Yayında!", author: {username: "Yönetim"}, published_at: "2025-10-20T10:00:00Z", content: "<p>VTC'mizin yeni web sitesi artık yayında! Daha modern ve işlevsel arayüzüyle karşınızdayız.</p>"},
+                        {id: 2, title: "Ekim Ayı Konvoy Takvimi", author: {username: "Etkinlik Ekibi"}, published_at: "2025-10-15T14:30:00Z", content: "<p>Ekim ayı boyunca düzenleyeceğimiz konvoyların listesi Konvoylar sayfamızda güncellenmiştir.</p>"}
+                    ]
+                 }
+            },
+            
+            async apiFetch(url) {
+                try {
+                    const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=`;
+                    const response = await fetch(proxyUrl + url, {
+                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V15' } // Version up
+                    });
+                    if (!response.ok) throw new Error(`API isteği başarısız: ${response.status}`);
+                    const data = await response.json();
+                    if (data.error === true || (typeof data.error === 'string' && data.error !== "false")) {
+                         if (data.response && data.response.includes("rate limit")) console.warn(`Rate limit hit for ${url}`);
+                         throw new Error(`API hatası: ${data.response || 'Bilinmeyen hata'}`);
+                    }
+                    return data;
+                } catch (error) {
+                    console.error(`API verisi alınırken hata oluştu (${url}):`, error);
+                    return null; 
+                }
+            },
+
+            fetchAndRenderAllData() {
+                 console.log("Fetching new data...");
+                Promise.all([
+                    this.apiFetch('https://api.truckersmp.com/v2/vtc/83171'),
+                    this.apiFetch('https://api.truckersmp.com/v2/vtc/83171/events'),
+                    this.apiFetch('https://api.truckersmp.com/v2/vtc/83171/events/attending'),
+                    this.apiFetch('https://discord.com/api/v9/invites/infinitygroup?with_counts=true'),
+                    this.apiFetch('https://api.truckersmp.com/v2/vtc/83171/members'),
+                    this.apiFetch('https://api.truckersmp.com/v2/vtc/83171/news')
+                ]).then(([vtcData, ownEventsData, attendingEventsData, discordData, membersData, newsData]) => {
+                     console.log("Data fetched:", { vtcData, ownEventsData, attendingEventsData, discordData, membersData, newsData });
+
+                    this.state.liveVtcInfo = vtcData ? vtcData.response : null;
+                    const ownEvents = ownEventsData ? ownEventsData.response : null;
+                    const attendingEvents = attendingEventsData ? attendingEventsData.response : null;
+                    this.state.liveMembers = membersData ? membersData.response : null;
+                    this.state.liveNews = newsData ? newsData.response : null;
+
+                    const stats = {
+                        drivers: this.state.liveVtcInfo ? this.state.liveVtcInfo.members_count : this.fallbackData.vtc.members_count,
+                        discord: discordData ? discordData.approximate_member_count : this.fallbackData.discord.approximate_member_count
+                    };
+                    
+                    // === DÜZELTME (PROBLEM 1): YİNELENEN KONVOYLARI AYIKLA ===
+                    // /events ve /events/attending aynı konvoyu getirebilir.
+                    const combinedEvents = [...(ownEvents || []), ...(attendingEvents || [])];
+                    const uniqueEventsMap = new Map();
+                    if (Array.isArray(combinedEvents)) {
+                        for (const event of combinedEvents) {
+                            if (event && event.id) { // Null/undefined eventleri ve ID'siz olanları atla
+                                uniqueEventsMap.set(event.id, event);
+                            }
+                        }
+                    }
+                    const allEvents = Array.from(uniqueEventsMap.values());
+                    // === DÜZELTME SONU ===
+                    
+                    this.state.liveConvoys = allEvents; 
+                    const futureEvents = allEvents.filter(event => event && event.start_at && new Date(event.start_at) > new Date());
+                    stats.convoys = futureEvents.length;
+
+                    this.renderStats(stats);
+                    
+                    // API'den hiçbiri gelmezse yedek veriyi kullan
+                    const convoysToRender = (ownEvents || attendingEvents) ? this.state.liveConvoys : this.fallbackData.convoys;
+                    this.renderConvoys(convoysToRender, !ownEvents && !attendingEvents);
+
+                    this.renderMembers(this.state.liveMembers || this.fallbackData.members, !this.state.liveMembers, this.state.liveVtcInfo ? this.state.liveVtcInfo.ranks : this.fallbackData.vtc.ranks);
+                    
+                    this.renderNews(this.state.liveNews ? this.state.liveNews.news : this.fallbackData.news.news, !this.state.liveNews);
+
+                    this.renderAdminPanelConvoys(ownEvents || this.fallbackData.convoys.filter(c => c.vtc.id === 83171));
+
+                    this.setupScrollAnimations(true);
+                     this.language.apply(this.state.currentLang);
+                });
+            },
+
+             init() {
+                 this.language.apply(this.state.currentLang); 
+                 this.fetchAndRenderAllData();
+                 setInterval(() => this.fetchAndRenderAllData(), 300000); 
+                 this.updateAdminVisibility(); 
+
+                 const header = document.getElementById('header');
+                 window.addEventListener('scroll', () => header.classList.toggle('header-scrolled', window.scrollY > 50));
+                 const mobileMenuButton = document.getElementById('mobile-menu-button');
+                 const mobileMenu = document.getElementById('mobile-menu');
+                 mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+                 window.closeMobileMenu = () => mobileMenu.classList.add('hidden');
+
+                 this.setupScrollAnimations();
+             },
+            
+            navigate(pageId, element) {
+                 document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+                 const targetPage = document.getElementById(pageId);
+                 if (targetPage) targetPage.classList.add('active');
+                
+                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                  if (element && element.classList) {
+                     element.classList.add('active');
+                 } else {
+                      document.querySelectorAll(`a[href="#${pageId}"]`).forEach(l => l.classList.add('active'));
+                 }
+
+                 window.scrollTo({ top: 0, behavior: 'instant' });
+                 if (window.innerWidth < 768) closeMobileMenu();
+            },
+
+            renderStats(stats) {
+                 const driversEl = document.getElementById('stats-drivers');
+                 const convoysEl = document.getElementById('stats-convoys');
+                 const discordEl = document.getElementById('stats-discord');
+
+                 if (driversEl) driversEl.dataset.target = stats.drivers;
+                 if (convoysEl) convoysEl.dataset.target = stats.convoys;
+                 if (discordEl) discordEl.dataset.target = stats.discord;
+
+                 if (driversEl) driversEl.removeAttribute('data-animated');
+                 if (convoysEl) convoysEl.removeAttribute('data-animated');
+                 if (discordEl) discordEl.removeAttribute('data-animated');
+            },
+
+
+            renderConvoys(data, isFallback = false) {
+                 const container = document.getElementById('convoy-list');
+                 if (!container) return;
+
+                 let html = '';
+                 if (isFallback) {
+                     html = `<div class="col-span-full text-center text-yellow-500 bg-yellow-500/10 py-2 rounded-lg text-sm mb-8" data-translate="convoyFallback">Canlı konvoy verileri geçici olarak yüklenemedi.</div>`;
+                 }
+
+                 if (!data || data.length === 0) {
+                     container.innerHTML = html + `<div class="text-center text-text-secondary"><p data-translate="noConvoys">Yaklaşan konvoy bulunmamaktadır.</p></div>`;
+                     return;
+                 }
+                
+                 const futureEvents = data.filter(event => event && event.start_at && new Date(event.start_at) > new Date());
+                 if (futureEvents.length === 0) {
+                     container.innerHTML = html + `<div class="text-center text-text-secondary"><p data-translate="noConvoys">Yaklaşan konvoy bulunmamaktadır.</p></div>`;
+                     return;
+                 }
+
+                 const ourVtcId = 83171;
+                 const ourConvoys = futureEvents.filter(event => event.vtc && event.vtc.id === ourVtcId).sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
+                 const attendingConvoys = futureEvents.filter(event => event.vtc && event.vtc.id !== ourVtcId).sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
+
+                 const createCardHtml = (event, isOurConvoy) => {
+                     if (!event || !event.start_at) return ''; 
+                      const dateStr = event.start_at.endsWith('Z') ? event.start_at : event.start_at.replace(' ', 'T') + 'Z';
+                     const date = new Date(dateStr);
+                     const formattedDate = date.toLocaleString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' });
+                     return `
+                     <div class="card rounded-xl overflow-hidden flex flex-col md:flex-row">
+                         <img src="${event.banner}" alt="${event.name}" class="w-full md:w-1/3 h-48 md:h-auto object-cover" onerror="this.src='https://placehold.co/400x200/1e293b/94a3b8?text=Banner+Yok';">
+                         <div class="p-6 flex flex-col flex-grow">
+                             <h3 class="text-xl font-bold text-white">${event.name}</h3>
+                             ${event.vtc ? `<p class="text-sm text-sky-300 mt-1"><span data-translate="hostedBy">Düzenleyen:</span> ${event.vtc.name}</p>` : ''}
+                             <p class="text-accent-secondary font-semibold mt-1">${formattedDate} (TSİ)</p>
+                             <div class="mt-4 border-t border-border-color pt-4 space-y-2 text-text-secondary">
+                                 <p><i class="fas fa-map-marker-alt fa-fw w-5"></i> <span data-translate="departure">Kalkış:</span> ${event.departure?.city || '?'} (${event.departure?.name || '?'})</p>
+                                 <p><i class="fas fa-flag-checkered fa-fw w-5"></i> <span data-translate="arrival">Varış:</span> ${event.arrive?.city || '?'} (${event.arrive?.name || '?'})</p>
+                                 <p><i class="fas fa-server fa-fw w-5"></i> <span data-translate="server">Sunucu:</span> ${event.server?.name || '?'}</p>
+                             </div>
+                             ${isOurConvoy ? `
+                             <div class="mt-auto pt-4">
+                                 <button onclick="App.modals.open('slot', ${event.id})" class="btn-outline w-full md:w-auto px-4 py-2 rounded-lg text-sm" data-translate="selectSlot">
+                                     Detaylar & Slot Seç
+                                 </button>
+                             </div>
+                             ` : ''}
+                         </div>
+                     </div>`;
+                 };
+
+                 let contentHtml = '';
+                 if (ourConvoys.length > 0) {
+                     contentHtml += `<div class="space-y-8"><h3 class="text-2xl font-bold text-white tracking-tight" data-translate="ourConvoys">Kendi Konvoylarımız</h3>${ourConvoys.map(e => createCardHtml(e, true)).join('')}</div>`;
+                 }
+                 if (attendingConvoys.length > 0) {
+                     contentHtml += `<div class="space-y-8 mt-16"><h3 class="text-2xl font-bold text-white tracking-tight" data-translate="attendingConvoys">Katılacağımız Konvoylar</h3>${attendingConvoys.map(e => createCardHtml(e, false)).join('')}</div>`;
+                 }
+                 container.innerHTML = html + contentHtml;
+                  this.language.apply(this.state.currentLang);
+            },
+
+            renderMembers(data, isFallback = false, ranks = null) {
+                 const container = document.getElementById('member-list');
+                 if (!container) return;
+                
+                 let html = '';
+                 if (isFallback) html += `<div class="col-span-full text-center text-yellow-500 bg-yellow-500/10 py-2 rounded-lg text-sm mb-4" data-translate="teamFallback">Canlı ekip listesi geçici olarak yüklenemedi.</div>`;
+
+                 if (!data || !data.members || data.members.length === 0) {
+                      html += `<p class="col-span-full text-center text-text-secondary" data-translate="noMembers">Ekip üyesi bulunmamaktadır.</p>`;
+                       container.innerHTML = html;
+                     return;
+                 }
+
+                 const members = data.members;
+                 const rankOrderMap = new Map();
+                 if (ranks && ranks.length > 0) {
+                      ranks.sort((a, b) => a.order - b.order).forEach(rank => rankOrderMap.set(rank.id, rank.order));
+                 } else {
+                     console.warn("Rank information not available, using fallback order.");
+                      const fallbackRanks = this.fallbackData.vtc.ranks;
+                      fallbackRanks.sort((a, b) => a.order - b.order).forEach(rank => rankOrderMap.set(rank.id, rank.order));
+                 }
+
+                 const sortedMembers = members.sort((a, b) => {
+                     const orderA = rankOrderMap.get(a.role_id) || 99; 
+                     const orderB = rankOrderMap.get(b.role_id) || 99;
+                     // console.log(`Sıralanıyor: ${a.username} (Role ID: ${a.role_id}, Order: ${orderA}) vs ${b.username} (Role ID: ${b.role_id}, Order: ${orderB})`); 
+                     return orderA - orderB;
+                 });
+                
+                  html += sortedMembers.map(member => `
+                      <a href="https://truckersmp.com/user/${member.user_id}" target="_blank" class="card rounded-xl p-6 text-center flex flex-col group">
+                          <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(member.username)}&background=161B22&color=E6EDF3&bold=true&size=128" class="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-border-color">
+                          <h4 class="text-lg font-bold text-white truncate">${member.username}</h4>
+                          <p class="text-accent-secondary font-semibold">${member.role}</p>
+                          <span class="mt-auto pt-4 text-sm text-text-secondary group-hover:text-white transition-colors" data-translate="viewProfile">Profili Görüntüle <i class="fas fa-external-link-alt ml-1"></i></span>
+                      </a>
+                  `).join('');
+                 container.innerHTML = html;
+                  this.language.apply(this.state.currentLang);
+            },
+
+            renderNews(newsData, isFallback = false) {
+                const newsListContainer = document.getElementById('news-list');
+                const latestNewsContainer = document.getElementById('latest-news-homepage');
+
+                let fallbackHtmlNews = '';
+                let fallbackHtmlLatest = '';
+                 if (isFallback) {
+                     fallbackHtmlNews = `<div class="text-center text-yellow-500 bg-yellow-500/10 py-2 rounded-lg text-sm mb-4" data-translate="newsFallback">Canlı haber verileri geçici olarak yüklenemedi.</div>`;
+                     fallbackHtmlLatest = fallbackHtmlNews;
+                 }
+
+                if (!newsData || newsData.length === 0) {
+                     if (latestNewsContainer) latestNewsContainer.style.display = 'none';
+                     if (newsListContainer) newsListContainer.innerHTML = fallbackHtmlNews + `<p class="text-center text-text-secondary" data-translate="noNews">Yayınlanmış haber bulunmamaktadır.</p>`;
+                    return;
+                }
+
+                // Render full news page
+                if (newsListContainer) {
+                    newsListContainer.innerHTML = fallbackHtmlNews + newsData.map(post => {
+                        const date = new Date(post.published_at);
+                        const formattedDate = date.toLocaleString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' });
+                        return `
+                        <div class="card rounded-xl p-8 content-prose">
+                            <h3 class="mt-0">${post.title}</h3>
+                            <p class="text-sm text-text-secondary mt-1"><span data-translate="publishedBy">Yayınlayan:</span> ${post.author.username} - ${formattedDate}</p>
+                            <div class="mt-4 border-t border-border-color pt-4">${post.content}</div>
+                        </div>
+                        `
+                    }).join('');
+                }
+
+                // Render latest news on homepage
+                if (latestNewsContainer) {
+                    const latestPosts = newsData.slice(0, 2);
+                    latestNewsContainer.style.display = 'block'; 
+                    latestNewsContainer.innerHTML = `
+                    <div class="text-center mb-16">
+                         <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight" data-translate="latestNewsTitle">Son Haberler</h2>
+                         <p class="mt-4 text-lg text-text-secondary max-w-3xl mx-auto" data-translate="latestNewsSubtitle">VTC'mizden en güncel duyurular.</p>
+                         ${fallbackHtmlLatest}
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                        ${latestPosts.map(post => {
+                            const date = new Date(post.published_at);
+                            const formattedDate = date.toLocaleString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' });
+                             const summary = post.content.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...';
+                            return `
+                            <div class="card rounded-xl p-6">
+                                <h3 class="text-xl font-bold text-white truncate">${post.title}</h3>
+                                <p class="text-sm text-text-secondary mt-1">${formattedDate}</p>
+                                <p class="mt-4 text-text-secondary text-sm">${summary}</p>
+                                <a href="#haberler" onclick="App.navigate('haberler', document.querySelector('a[href=\\'#haberler\\']'))" class="text-accent-secondary font-semibold mt-4 inline-block" data-translate="readMore">Devamını Oku <i class="fas fa-arrow-right ml-1"></i></a>
+                            </div>
+                            `
+                        }).join('')}
+                    </div>
+                    `;
+                }
+                 this.language.apply(this.state.currentLang);
+            },
+            
+            renderAdminPanelConvoys(data) {
+                 const container = document.getElementById('admin-convoy-list');
+                 if (!container || !this.state.isAdmin) return; 
+
+                 let html = '';
+                  if (!data || data.length === 0) {
+                       html = `<p class="text-center text-text-secondary" data-translate="noAdminConvoys">Yönetilecek konvoy bulunmamaktadır.</p>`;
+                     container.innerHTML = html;
+                     return;
+                 }
+
+                 const ourVtcId = 83171;
+                 // Add null checks
+                 const ourConvoys = data.filter(event => event && event.vtc && event.vtc.id === ourVtcId && event.start_at && new Date(event.start_at) > new Date())
+                                     .sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
+
+                 if (ourConvoys.length === 0) {
+                     html = `<p class="text-center text-text-secondary" data-translate="noAdminConvoys">Yönetilecek konvoy bulunmamaktadır.</p>`;
+                     container.innerHTML = html;
+                     return;
+                 }
+
+                  html = ourConvoys.map(event => {
+                       const dateStr = event.start_at.endsWith('Z') ? event.start_at : event.start_at.replace(' ', 'T') + 'Z';
+                      const date = new Date(dateStr);
+                      const formattedDate = date.toLocaleString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' });
+                      const bookedSlotsCount = App.state.bookedSlots[event.id] ? Object.keys(App.state.bookedSlots[event.id]).length : 0;
+                      const totalSlots = event.slots_total || 20; 
+                      const occupancy = ((bookedSlotsCount / totalSlots) * 100).toFixed(0);
+
+                      return `
+                       <div class="card rounded-xl p-6 flex flex-col md:flex-row items-center gap-4">
+                           <img src="${event.banner}" alt="${event.name}" class="w-full md:w-1/4 h-24 object-cover rounded-lg mb-4 md:mb-0" onerror="this.src='https://placehold.co/400x200/1e293b/94a3b8?text=Banner+Yok';">
+                           <div class="flex-grow text-center md:text-left">
+                               <h3 class="text-lg font-bold text-white">${event.name}</h3>
+                               <p class="text-accent-secondary text-sm">${formattedDate} (TSİ)</p>
+                               <p class="text-xs text-text-secondary mt-1" data-translate="slotOccupancy">Slot Doluluğu: ${bookedSlotsCount}/${totalSlots} (%${occupancy})</p>
+                           </div>
+                           <button onclick="App.modals.open('slot', ${event.id})" class="btn-outline w-full md:w-auto px-4 py-2 rounded-lg text-sm" data-translate="manageSlots">
+                               Slotları Yönet
+                           </button>
+                       </div>
+                       `;
+                  }).join('');
+                   container.innerHTML = html;
+                   this.language.apply(this.state.currentLang);
+            },
+
+            modals: {
+                 open(type, id = null) {
+                     const container = document.getElementById('modal-container');
+                     let content = '';
+                     let modalMaxWidth = 'max-w-lg'; 
+
+                     if (type === 'slot') {
+                         modalMaxWidth = 'max-w-4xl'; 
+                         let convoy = App.state.liveConvoys.find(c => c && c.id === id); 
+                         if(!convoy) convoy = App.fallbackData.convoys.find(c => c && c.id === id); 
+                         
+                         if(!convoy) { console.error("Konvoy bulunamadı:", id); return; }
+
+                         const dateStr = convoy.start_at.endsWith('Z') ? convoy.start_at : convoy.start_at.replace(' ', 'T') + 'Z';
+                         const date = new Date(dateStr);
+                         const formattedDate = date.toLocaleString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' });
+                         
+                         content = `
+                             <div class="flex justify-between items-start mb-6">
+                                 <div>
+                                     <h2 class="text-3xl font-bold text-white">${convoy.name}</h2>
+                                     <p class="text-accent-secondary font-semibold mt-1">${formattedDate} (TSİ)</p>
+                                      <div class="mt-4 space-y-1 text-sm text-text-secondary">
+                                         <p><i class="fas fa-map-marker-alt fa-fw w-5"></i> <span data-translate="departure">Kalkış:</span> ${convoy.departure?.city || '?'} (${convoy.departure?.name || '?'})</p>
+                                         <p><i class="fas fa-flag-checkered fa-fw w-5"></i> <span data-translate="arrival">Varış:</span> ${convoy.arrive?.city || '?'} (${convoy.arrive?.name || '?'})</p>
+                                         <p><i class="fas fa-server fa-fw w-5"></i> <span data-translate="server">Sunucu:</span> ${convoy.server?.name || '?'}</p>
+                                     </div>
+                                 </div>
+                                 <button onclick="App.modals.close()" class="text-gray-400 text-3xl leading-none hover:text-white">&times;</button>
+                             </div>
+                              <img src="${convoy.banner}" alt="${convoy.name}" class="w-full h-48 object-cover rounded-lg mb-6" onerror="this.style.display='none';">
+                             <p class="text-text-secondary mb-6" data-translate="slotSelectInfo">Aşağıdaki haritadan boş bir slota tıklayarak yerinizi ayırtabilirsiniz. ${App.state.isAdmin ? '<span class="text-red-400 font-semibold" data-translate="adminSlotInfo">(Admin: Dolu slotları düzenleyebilirsiniz)</span>' : ''}</p>
+                              <div class="bg-bg-primary p-4 rounded-lg">
+                                 <div id="slot-grid" class="gap-3 text-center">
+                                      <div class="col-span-full text-center text-text-secondary"><i class="fas fa-spinner fa-spin"></i> Loading slots...</div>
+                                 </div>
+                              </div>
+                         `;
+                     }
+                     
+                      container.innerHTML = `
+                           <div id="modal-overlay" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[999] fade-in" onclick="App.modals.close()">
+                               <div class="modal-content w-full ${modalMaxWidth} rounded-xl shadow-lg p-8 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+                                   ${content}
+                               </div>
+                           </div>
+                       `;
+
+                     if (type === 'slot') App.renderSlots(id);
+                     App.language.apply(App.state.currentLang);
+                 },
+                 close() {
+                     const overlay = document.getElementById('modal-overlay');
+                     if (overlay) {
+                         overlay.style.opacity = 0;
+                         setTimeout(() => overlay.remove(), 300);
+                     }
+                 }
+            },
+
+             renderSlots(convoyId) {
+                 const grid = document.getElementById('slot-grid');
+                 if (!grid) return;
+                
+                 let convoy = App.state.liveConvoys.find(c => c && c.id === convoyId);
+                  if(!convoy) convoy = App.fallbackData.convoys.find(c=> c && c.id === convoyId);
+                  if (!convoy) { grid.innerHTML = `<p class='col-span-full text-red-400'>Konvoy bilgisi yüklenemedi.</p>`; return; }
+
+                 const totalSlots = convoy.slots_total || 20; 
+                 
+                 // === DÜZELTME (PROBLEM 3): Dinamik Grid Düzeni ===
+                 // 6 veya daha az slot varsa "Partner/Takım" düzeni, aksi halde standart düzen
+                 grid.className = 'gap-3 text-center'; // Önceki sınıfları temizle
+                 
+                 if (totalSlots <= 6) {
+                     // Partner/Takım konvoyu düzeni (3-4-5-6 slot)
+                     grid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-3'); 
+                 } else if (totalSlots <= 12) {
+                     // Orta boy konvoy düzeni
+                     grid.classList.add('grid', 'grid-cols-3', 'md:grid-cols-4', 'lg:grid-cols-6');
+                 } else {
+                     // Standart kalabalık konvoy düzeni
+                     grid.classList.add('grid', 'grid-cols-5', 'md:grid-cols-8', 'lg:grid-cols-10');
+                 }
+                 
+                 const isTeamSlot = totalSlots <= 6; // Slot görünümünü belirlemek için bayrak
+                 // === DÜZELTME SONU ===
+                 
+                 if (!App.state.bookedSlots[convoyId]) App.state.bookedSlots[convoyId] = {};
+                 const booked = App.state.bookedSlots[convoyId];
+
+                 grid.innerHTML = Array.from({ length: totalSlots }, (_, i) => {
+                     const slotId = i + 1;
+                     const isTaken = !!booked[slotId];
+                     const bookingUser = isTaken ? booked[slotId].user : null;
+                     const isAdminBooking = isTaken && booked[slotId].isAdminBooking;
+                     const isAdmin = App.state.isAdmin;
+                     
+                     let slotClass = isTaken ? 'taken' : 'empty';
+                     let onClickAction = '';
+                     let tooltipText = '';
+
+                     if (isTaken) {
+                         tooltipText = App.language.translate('slotTakenBy', { user: bookingUser });
+                         if (isAdmin) {
+                             slotClass += ' admin-edit'; 
+                              onClickAction = `App.slots.select(${convoyId}, ${slotId})`; 
+                              tooltipText = App.language.translate('adminEditSlot', { user: bookingUser });
+                         }
+                     } else {
+                          onClickAction = `App.slots.select(${convoyId}, ${slotId})`; 
+                          tooltipText = App.language.translate('bookSlot', { slotId: slotId });
+                     }
+
+                     // === DÜZELTME (PROBLEM 3): Dinamik Slot Görünümü ===
+                     let slotHeightClass = isTeamSlot ? 'h-32' : 'h-20'; // Takım slotları daha yüksek
+                     
+                     return `
+                         <div onclick="${onClickAction}" 
+                              class="slot ${slotClass} rounded-lg p-3 ${slotHeightClass} flex flex-col items-center justify-center relative group">
+                             
+                             <p class="font-bold ${isTeamSlot ? 'text-2xl' : 'text-lg'} mb-1">${slotId}</p>
+                             
+                             ${isTaken ? `
+                                 <i class="fas fa-truck ${isTeamSlot ? 'text-3xl' : 'text-2xl'} mb-1"></i>
+                                 <p class="text-center font-semibold ${isTeamSlot ? 'text-base' : 'text-xs'} truncate w-full">${bookingUser}</p>
+                                 ${isAdminBooking ? '<i class="fas fa-crown text-yellow-400 text-xs absolute top-1 right-1" title="Admin Rezervasyonu"></i>' : ''}
+                             ` : ''}
+                             
+                             <span class="slot-tooltip bg-bg-primary text-xs px-2 py-1 rounded shadow-lg">${tooltipText}</span>
+                         </div>
+                     `;
+                     // === DÜZELTME SONU ===
+                 }).join('');
+                  App.language.apply(App.state.currentLang);
+            },
+
+            slots: {
+                 select(convoyId, slotId) {
+                     if (!App.state.bookedSlots[convoyId]) App.state.bookedSlots[convoyId] = {};
+                     const currentBooking = App.state.bookedSlots[convoyId][slotId];
+                     const isAdmin = App.state.isAdmin;
+                     
+                     if(currentBooking && !isAdmin){ 
+                         alert(App.language.translate('slotAlreadyTaken'));
+                         return;
+                     }
+
+                     let username;
+                     if(isAdmin && currentBooking){ 
+                          const action = prompt(App.language.translate('adminSlotActionPrompt', { current: currentBooking.user }), currentBooking.user);
+                          if(action === null) return; 
+                          if(action === ''){ 
+                              delete App.state.bookedSlots[convoyId][slotId];
+                         } else { 
+                              username = action;
+                              App.state.bookedSlots[convoyId][slotId] = { user: username, isAdminBooking: true };
+                         }
+                     } else { 
+                          username = prompt(App.language.translate('slotUsernamePrompt', { slotId: slotId }), "");
+                          if (!username) return; 
+                          App.state.bookedSlots[convoyId][slotId] = { user: username, isAdminBooking: isAdmin };
+                     }
+                     
+                     localStorage.setItem('bookedSlots', JSON.stringify(App.state.bookedSlots));
+                     
+                     App.renderSlots(convoyId); 
+                      if(isAdmin) App.renderAdminPanelConvoys(App.getAllEventsData());
+                 }
+            },
+            
+             getAllEventsData() {
+                 // Hem canlı hem de fallback veriyi dikkate alarak admin panelini doldur
+                 const data = App.state.liveConvoys.length > 0 ? App.state.liveConvoys : App.fallbackData.convoys;
+                 return data.filter(c => c && c.vtc?.id === 83171);
+             },
+            
+            updateAdminVisibility() {
+                 const isAdmin = this.state.isAdmin;
+                 document.getElementById('admin-nav-link').style.display = isAdmin ? 'block' : 'none';
+                 document.getElementById('admin-mobile-nav-link').style.display = isAdmin ? 'block' : 'none';
+                 document.getElementById('admin-footer-link').style.display = isAdmin ? 'block' : 'none';
+                  if (isAdmin) {
+                      this.renderAdminPanelConvoys(this.getAllEventsData());
+                  } else if (!isAdmin) {
+                      const adminPage = document.getElementById('admin');
+                      if (adminPage && adminPage.classList.contains('active')) {
+                          App.navigate('anasayfa', document.querySelector('a[href="#anasayfa"]')); 
+                      }
+                  }
+            },
+
+            language: {
+                translations: {
+                    // Navigation
+                    navHome: { tr: "Ana Sayfa", en: "Homepage" },
+                    navNews: { tr: "Haberler", en: "News" },
+                    navConvoys: { tr: "Konvoylar", en: "Convoys" },
+                    navTeam: { tr: "Ekibimiz", en: "Our Team" },
+                    navGallery: { tr: "Galeri", en: "Gallery" },
+                    navLegal: { tr: "Yasal", en: "Legal" },
+                    navAdmin: { tr: "Admin", en: "Admin" },
+                    applyNow: { tr: "Başvuru Yap", en: "Apply Now" },
+                    // Hero
+                    heroTitle: { tr: "Their dream is our standard.", en: "Their dream is our standard." },
+                    heroSubtitle: { tr: "TruckersMP'nin en profesyonel ve samimi topluluğuna katılarak sanal lojistik deneyiminizi bir üst seviyeye taşıyın.", en: "Join one of TruckersMP's most professional and friendly communities to take your virtual logistics experience to the next level." },
+                    joinUs: { tr: "Hemen Katıl", en: "Join Now" },
+                    seeConvoys: { tr: "Konvoyları Gör", en: "See Convoys" },
+                    // About
+                    aboutTitle: { tr: "Biz Kimiz?", en: "Who Are We?" },
+                    aboutText: { tr: "Iиfıиıтч Gяσuρ® 20.09.2025 tarihinde temelleri atılmış ve bugün profesyonel bir şekilde yönetilmektedir. Euro Truck Simulator 2 odaklı bir topluluk olup, faaliyetlerini düzenli ve istikrarlı şekilde sürdürmektedir.", en: "Iиfıиıтч Gяσuρ® was founded on 20.09.2025 and is managed professionally today. It is a Euro Truck Simulator 2 focused community, maintaining its activities regularly and steadily." },
+                    // Stats
+                    statsDrivers: { tr: "Toplam Sürücü", en: "Total Drivers" },
+                    statsConvoys: { tr: "Yaklaşan Konvoy", en: "Upcoming Convoys" },
+                    statsDiscord: { tr: "Discord Üyesi", en: "Discord Members" },
+                    statsFounded: { tr: "Kuruluş", en: "Founded" },
+                    // Latest News (Homepage)
+                    latestNewsTitle: { tr: "Son Haberler", en: "Latest News" },
+                    latestNewsSubtitle: { tr: "VTC'mizden en güncel duyurular.", en: "The latest announcements from our VTC." },
+                    readMore: { tr: "Devamını Oku", en: "Read More" },
+                     publishedBy: { tr: "Yayınlayan:", en: "Published by:" },
+                    // CTA
+                    ctaTitle: { tr: "Aramıza Katılmaya Hazır mısın?", en: "Ready to Join Us?" },
+                    ctaSubtitle: { tr: "Ekibimizin bir parçası olmak ve bu heyecana ortak olmak için başvuru sayfamızı ziyaret et.", en: "Visit our application page to become a part of our team and share this excitement." },
+                    ctaButton: { tr: "Başvuru Sayfasına Git", en: "Go to Application Page" },
+                    // News Page
+                    newsTitle: { tr: "VTC Haberleri", en: "VTC News" },
+                    newsSubtitle: { tr: "Ekibimizden en son duyurular ve gelişmeler.", en: "The latest announcements and developments from our team." },
+                    loadingNews: { tr: "Haberler yükleniyor...", en: "Loading news..." },
+                     newsFallback: {tr: "Canlı haber verileri geçici olarak yüklenemedi.", en: "Live news data could not be loaded temporarily."},
+                    noNews: { tr: "Yayınlanmış haber bulunmamaktadır.", en: "No news published yet." },
+                    // Convoys Page
+                    convoysTitle: { tr: "Yaklaşan Konvoylar", en: "Upcoming Convoys" },
+                    convoysSubtitle: { tr: "Gelecek maceralarımız için takviminizi işaretleyin.", en: "Mark your calendars for our upcoming adventures." },
+                    loadingConvoys: { tr: "Konvoylar yükleniyor...", en: "Loading convoys..." },
+                    convoyFallback: {tr: "Canlı konvoy verileri geçici olarak yüklenemedi.", en: "Live convoy data could not be loaded temporarily."},
+                    noConvoys: {tr: "Yaklaşan konvoy bulunmamaktadır.", en: "No upcoming convoys found."},
+                    ourConvoys: { tr: "Kendi Konvoylarımız", en: "Our Convoys" },
+                    attendingConvoys: { tr: "Katılacağımız Konvoylar", en: "Attending Convoys" },
+                     hostedBy: { tr: "Düzenleyen:", en: "Hosted by:" },
+                     departure: { tr: "Kalkış:", en: "Departure:" },
+                     arrival: { tr: "Varış:", en: "Arrival:" },
+                     server: { tr: "Sunucu:", en: "Server:" },
+                     selectSlot: { tr: "Detaylar & Slot Seç", en: "Details & Select Slot" }, // Changed text
+                    // Team Page
+                    teamTitle: { tr: "Ekibimiz", en: "Our Team" },
+                    teamSubtitle: { tr: "Infinity Group'u oluşturan harika insanlar.", en: "The amazing people who make up Infinity Group." },
+                    loadingTeam: { tr: "Ekip listesi yükleniyor...", en: "Loading team list..." },
+                     teamFallback: {tr: "Canlı ekip listesi geçici olarak yüklenemedi.", en: "Live team list could not be loaded temporarily."},
+                     noMembers: {tr: "Ekip üyesi bulunmamaktadır.", en: "No team members found."},
+                     viewProfile: { tr: "Profili Görüntüle", en: "View Profile" },
+                    // Gallery Page
+                    galleryTitle: { tr: "Galerimiz", en: "Our Gallery" },
+                    gallerySubtitle: { tr: "Yollardaki en güzel anlarımızdan birkaçı.", en: "Some of our best moments on the road." },
+                    followInstagram: { tr: "Daha Fazlası İçin Takip Edin", en: "Follow for More" },
+                    // Apply Page
+                    applyTitle: { tr: "Aramıza Katılmaya Hazır mısın?", en: "Ready to Join Us?" },
+                    applySubtitle: { tr: "Ekibimizin bir parçası olmak ve bu heyecana ortak olmak için aşağıdaki adımlı izlemen yeterli.", en: "Follow the steps below to become a part of our team and share this excitement." },
+                    applyStepsTitle: { tr: "Başvuru Süreci", en: "Application Process" },
+                     'applyStep1.1': { tr: "Discord'a Katıl:", en: "Join Discord:" },
+                     'applyStep1.2': { tr: "Sunucumuza katılarak ilk adımı at. Burası tüm iletişimimizin merkezi.", en: "Take the first step by joining our server. This is the center of all our communication." },
+                     'applyStep2.1': { tr: "Kuralları Oku:", en: "Read the Rules:" },
+                     'applyStep2.2': { tr: " #kurallar kanalını dikkatlice oku ve topluluk standartlarımızı anladığından emin ol.", en: "Carefully read the #rules channel and make sure you understand our community standards." },
+                     'applyStep3.1': { tr: "Başvuru Yap:", en: "Apply:" },
+                     'applyStep3.2': { tr: "#başvuru-yap kanalındaki yönergeleri izleyerek başvuru formunu doldur ve gönder.", en: "Follow the instructions in the #apply channel to fill out and submit the application form." },
+                     'applyStep4.1': { tr: "Onay Bekle:", en: "Wait for Approval:" },
+                     'applyStep4.2': { tr: "Yönetim ekibimiz başvurunu en kısa sürede inceleyecek ve seninle iletişime geçecektir.", en: "Our management team will review your application as soon as possible and contact you." },
+                    joinDiscordApply: { tr: "Discord'a Katıl ve Başvurunu Başlat", en: "Join Discord & Start Your Application" },
+                     // Legal Page
+                    legalTitle: { tr: "Yasal Bilgilendirme", en: "Legal Information" },
+                    legalSubtitle: { tr: "Kullanım Koşulları ve Gizlilik Politikamız.", en: "Our Terms of Use and Privacy Policy." },
+                    termsTitle: { tr: "Kullanım Koşulları", en: "Terms of Use" },
+                    termsText: { tr: "Infinity Group VTC (\"biz\", \"bizim\") web sitesini, Discord sunucusunu ve diğer hizmetlerini kullanarak bu kullanım koşullarını kabul etmiş sayılırsınız. Hizmetlerimizi kullanırken TruckersMP kurallarına ve kendi VTC kurallarımıza uymakla yükümlüsünüz. Topluluğa saygısızlık, hile kullanımı veya zarar verici davranışlar VTC'den uzaklaştırılma ile sonuçlanacaktır. Üyeliğinizi herhangi bir zamanda, kendi takdirimize bağlı olarak sonlandırma hakkımızı saklı tutarız.", en: "By using the Infinity Group VTC (\"we\", \"our\") website, Discord server, and other services, you agree to these terms of use. While using our services, you are obligated to comply with TruckersMP rules and our own VTC rules. Disrespect towards the community, cheating, or harmful behavior will result in removal from the VTC. We reserve the right to terminate your membership at any time at our discretion." },
+                    privacyTitle: { tr: "Gizlilik Politikası", en: "Privacy Policy" },
+                    privacyText: { tr: "Gizliliğinize önem veriyoruz. Başvuru sırasında sağladığınız kişisel veriler (Discord ID, TruckersMP profili, yaş vb.) yalnızca VTC üyeliğini yönetmek, iletişimi sağlamak ve topluluk içi etkinlikleri düzenlemek amacıyla kullanılır. Bu bilgiler üçüncü taraflarla kesinlikle paylaşılmaz veya satılmaz. Web sitemiz, temel işlevsellik için gerekli olan çerezleri (cookies) kullanabilir. Yönetimle iletişime geçerek kişisel verilerinizin silinmesini talep etme hakkına sahipsiniz.", en: "We value your privacy. Personal data provided during application (Discord ID, TruckersMP profile, age, etc.) is used solely for managing VTC membership, facilitating communication, and organizing community events. This information is strictly not shared with or sold to third parties. Our website may use cookies necessary for basic functionality. You have the right to request the deletion of your personal data by contacting the management." },
+                    botPrivacyTitle: { tr: "Discord Botu Gizlilik Politikası", en: "Discord Bot Privacy Policy" },
+                    botPrivacyText: { tr: "Discord sunucumuzda kullanılan özel botumuz, özelliklerini sağlamak ve sunucu moderasyonunu kolaylaştırmak amacıyla herkese açık kullanıcı bilgilerinizi (Kullanıcı ID, kullanıcı adı gibi) ve komut kullanım verilerinizi toplayabilir. Bu veriler güvenli bir şekilde saklanır ve yalnızca VTC'nin iç işleyişi için kullanılır. Bu veriler hiçbir şekilde VTC dışındaki üçüncü taraflarla paylaşılmaz.", en: "Our custom bot used on our Discord server may collect publicly available user information (such as User ID, username) and command usage data to provide its features and facilitate server moderation. This data is stored securely and used solely for the internal operation of the VTC. This data is never shared with third parties outside the VTC." },
+                     // Footer
+                    footerSitemap: { tr: "Site Haritası", en: "Sitemap" },
+                    footerSocial: { tr: "Sosyal Medya", en: "Social Media" },
+                    footerRights: { tr: "Tüm hakları saklıdır.", en: "All rights reserved." },
+                    // Slot Modal
+                    slotSelectInfo: {tr: "Aşağıdaki haritadan boş bir slota tıklayarak yerinizi ayırtabilirsiniz.", en: "You can reserve your spot by clicking an empty slot on the map below."},
+                    adminSlotInfo: {tr: "(Admin: Dolu slotları düzenleyebilirsiniz)", en: "(Admin: You can edit occupied slots)"},
+                    bookSlot: {tr: "Slot {slotId} - Ayırt", en: "Slot {slotId} - Book"},
+                    slotTakenBy: {tr: "Alındı: {user}", en: "Taken by: {user}"},
+                    adminEditSlot: {tr: "Düzenle: {user}", en: "Edit: {user}"},
+                    slotAlreadyTaken: {tr: "Bu slot zaten alınmış.", en: "This slot is already taken."},
+                    adminSlotActionPrompt: {tr: "Mevcut kullanıcı: {current}. Yeni kullanıcı adını girin veya boş bırakarak slotu temizleyin:", en: "Current user: {current}. Enter new username or leave empty to clear slot:"},
+                    slotUsernamePrompt: {tr: "Slot {slotId} için kullanıcı adınızı girin:", en: "Enter your username for Slot {slotId}:"},
+                    // Admin Page
+                    adminTitle: {tr: "Admin Paneli (Simülasyon)", en: "Admin Panel (Simulation)"},
+                    adminSubtitle: {tr: "Konvoy Slot Yönetimi", en: "Convoy Slot Management"},
+                    loadingAdminConvoys: {tr: "Yönetilecek konvoylar yükleniyor...", en: "Loading convoys to manage..."},
+                    noAdminConvoys: {tr: "Yönetilecek konvoy bulunmamaktadır.", en: "No convoys found to manage."},
+                    manageSlots: {tr: "Slotları Yönet", en: "Manage Slots"}, 
+                     slotOccupancy: {tr: "Slot Doluluğu", en: "Slot Occupancy"}
+                },
+                
+                set(lang) {
+                    if (lang !== 'tr' && lang !== 'en') lang = 'tr'; 
+                    App.state.currentLang = lang;
+                    localStorage.setItem('vtcLang', lang);
+                    this.apply(lang);
+                    document.querySelectorAll('.btn-lang').forEach(btn => btn.classList.remove('active'));
+                    document.getElementById(`lang-${lang}`).classList.add('active');
+                    document.getElementById(`lang-mobile-${lang}`).classList.add('active');
+                     document.documentElement.lang = lang;
+                },
+
+                apply(lang) {
+                    document.querySelectorAll('[data-translate]').forEach(el => {
+                        const key = el.dataset.translate;
+                        if (this.translations[key] && this.translations[key][lang]) {
+                             const icon = el.querySelector('i');
+                             if(icon && el.childNodes.length > 1) { // Check for text node + icon
+                                 // Handle elements with text AND an icon
+                                 const currentText = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE)?.nodeValue.trim();
+                                 const newText = this.translations[key][lang];
+                                 if (currentText !== newText) {
+                                     // Rebuild inner HTML to preserve icon
+                                     el.innerHTML = `${newText} ${icon.outerHTML}`;
+                                 }
+                             } else {
+                                 // Handle elements with only text
+                                 if (el.textContent !== this.translations[key][lang]) {
+                                     el.textContent = this.translations[key][lang];
+                                 }
+                             }
+                        }
+                    });
+                     
+                     // Re-translate dynamic tooltips in slot modal
+                     const slotGrid = document.getElementById('slot-grid');
+                     if(slotGrid){
+                         slotGrid.querySelectorAll('.slot').forEach(slot => {
+                             const tooltip = slot.querySelector('.slot-tooltip');
+                             if(tooltip){
+                                 const slotIdText = slot.querySelector('p:first-child')?.textContent;
+                                 const slotId = slotIdText ? parseInt(slotIdText) : null;
+                                 const usernameEl = slot.querySelector('p.font-semibold'); // More specific selector
+                                 const username = usernameEl ? usernameEl.textContent : null;
+                                 
+                                 if(slot.classList.contains('taken')){
+                                      if(App.state.isAdmin && slot.classList.contains('admin-edit')) {
+                                          tooltip.textContent = this.translate('adminEditSlot', { user: username });
+                                      } else {
+                                          tooltip.textContent = this.translate('slotTakenBy', { user: username });
+                                      }
+                                 } else if (slotId) {
+                                      tooltip.textContent = this.translate('bookSlot', { slotId: slotId });
+                                 }
+                             }
+                         });
+                     }
+                },
+                 translate(key, params = {}) {
+                     const lang = App.state.currentLang;
+                     let text = (this.translations[key] && this.translations[key][lang]) ? this.translations[key][lang] : key;
+                     for (const param in params) {
+                         text = text.replace(`{${param}}`, params[param]);
+                     }
+                     return text;
+                 }
+            },
+            
+            setupScrollAnimations(forceAnimateStats = false) {
+                 const sections = document.querySelectorAll('.page-content > div:not(.bg-bg-secondary), .bg-bg-secondary > div');
+                 const animateStats = (counter) => {
+                     const target = +counter.dataset.target;
+                     if ((!counter.hasAttribute('data-animated') || forceAnimateStats) && !isNaN(target)) {
+                         counter.setAttribute('data-animated', 'true');
+                         let count = 0;
+                         const duration = 1000; 
+                         const startTime = performance.now();
+
+                         const step = (currentTime) => {
+                             const elapsedTime = currentTime - startTime;
+                             const progress = Math.min(1, elapsedTime / duration);
+                             count = Math.ceil(progress * target);
+                             counter.innerText = count.toLocaleString('tr-TR');
+                             if (progress < 1) {
+                                 requestAnimationFrame(step);
+                             } else {
+                                 counter.innerText = target.toLocaleString('tr-TR');
+                             }
+                         };
+                          requestAnimationFrame(step);
+                     } else if (isNaN(target)){
+                          counter.innerText = counter.dataset.target; 
+                     }
+                 };
+
+                 if (App.sectionObserver) App.sectionObserver.disconnect();
+
+                App.sectionObserver = new IntersectionObserver((entries, observer) => {
+                     entries.forEach(entry => {
+                         if (entry.isIntersecting) {
+                             entry.target.classList.add('is-visible');
+                             const stats = entry.target.querySelectorAll('[data-target]');
+                             if(stats.length > 0) {
+                                  stats.forEach(animateStats);
+                             }
+                         } 
+                     });
+                }, { threshold: 0.1 }); 
+
+                document.querySelectorAll('.bg-bg-secondary, .container').forEach(section => {
+                     if(!section.classList.contains('fade-in-section')){
+                         section.classList.add('fade-in-section');
+                     }
+                     App.sectionObserver.observe(section);
+                });
+
+                 if (forceAnimateStats) {
+                     document.querySelectorAll('[data-target]').forEach(counter => {
+                         const rect = counter.getBoundingClientRect();
+                         if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
+                             counter.removeAttribute('data-animated'); 
+                             animateStats(counter);
+                         }
+                     });
+                 }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => App.init());
+    </script>
+</body>
+</html>
