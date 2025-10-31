@@ -113,6 +113,15 @@
             color: var(--accent-primary);
             border-bottom-color: var(--accent-primary);
         }
+        /* Şifre Göster/Gizle Butonu Stili */
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -423,7 +432,7 @@
                 try {
                     const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=`;
                     const response = await fetch(proxyUrl + url, {
-                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V19' } 
+                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V20' } // Versiyon güncellendi
                     });
                     if (!response.ok) throw new Error(`API request failed: ${response.status}`);
                     const data = await response.json();
@@ -472,7 +481,7 @@
                     }
                     const allEvents = Array.from(uniqueEventsMap.values());
                     
-                    this.state.liveConvoys = allEvents;
+                    this.state.liveConvoys = allEvents; // Canlı konvoyları state'e kaydet
                     const futureEvents = allEvents.filter(event => event && event.start_at && new Date(event.start_at) > new Date());
                     stats.convoys = futureEvents.length;
 
@@ -792,7 +801,9 @@
                                 <button id="tab-login" class="tab-button active" onclick="App.auth.showTab('login')">Login</button>
                                 <button id="tab-signup" class="tab-button" onclick="App.auth.showTab('signup')">Sign Up (VTC Leaders)</button>
                             </div>
+                            
                             <div id="auth-error" class="text-red-400 bg-red-500/10 p-3 rounded-lg mb-4" style="display: none;"></div>
+                            
                             <form id="login-form" class="space-y-4" onsubmit="App.auth.signIn(event)">
                                 <div>
                                     <label for="login-email" class="block text-sm font-medium text-text-secondary mb-1">Email</label>
@@ -800,10 +811,14 @@
                                 </div>
                                 <div>
                                     <label for="login-password" class="block text-sm font-medium text-text-secondary mb-1">Password</label>
-                                    <input type="password" id="login-password" class="form-input" required>
+                                    <div class="relative">
+                                        <input type="password" id="login-password" class="form-input" required>
+                                        <i class="fas fa-eye password-toggle" onclick="App.auth.togglePasswordVisibility('login-password', this)"></i>
+                                    </div>
                                 </div>
                                 <button type="submit" class="btn-primary w-full py-3 rounded-lg font-bold">Login</button>
                             </form>
+                            
                             <form id="signup-form" class="space-y-4" style="display: none;" onsubmit="App.auth.signUp(event)">
                                 <div>
                                     <label for="signup-username" class="block text-sm font-medium text-text-secondary mb-1">Username (Your Name)</label>
@@ -819,7 +834,10 @@
                                 </div>
                                 <div>
                                     <label for="signup-password" class="block text-sm font-medium text-text-secondary mb-1">Password</label>
-                                    <input type="password" id="signup-password" class="form-input" minlength="6" required>
+                                     <div class="relative">
+                                        <input type="password" id="signup-password" class="form-input" minlength="6" required>
+                                        <i class="fas fa-eye password-toggle" onclick="App.auth.togglePasswordVisibility('signup-password', this)"></i>
+                                    </div>
                                 </div>
                                 <button type="submit" class="btn-primary w-full py-3 rounded-lg font-bold">Create Account</button>
                             </form>
@@ -890,7 +908,6 @@
             },
 
             slots: {
-                 // ESKİ SİSTEM (YENİSİYLE DEĞİŞTİ)
                  select(convoyId, slotId) {
                      alert('This booking system is being upgraded! Please login as a VTC Leader.');
                  }
@@ -906,6 +923,7 @@
             // ========================================================
             auth: {
                 init() {
+                    // Sayfa yüklendiğinde ve her giriş/çıkışta durumu dinle
                     _supabase.auth.onAuthStateChange(async (event, session) => {
                         console.log('Auth State Change:', event);
                         if (session && session.user && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
@@ -923,6 +941,7 @@
                 
                 async getProfile(user) {
                     try {
+                        // RLS KAPALI olduğu için bu sorgu artık %100 çalışacaktır.
                         let { data: profile, error } = await _supabase
                             .from('profiles')
                             .select('username, vtc_name, role')
@@ -940,7 +959,7 @@
                             // Bu durum, trigger'ın henüz çalışmadığı bir "race condition" olabilir.
                             // Kullanıcıyı ayarla, ancak profil bilgisi yok.
                             App.state.currentUser = user;
-                            console.warn("User logged in, but profile data is not ready yet.");
+                            console.warn("User logged in, but profile data is not ready yet (race condition).");
                         }
                     } catch (e) {
                         console.error("Error in getProfile:", e);
@@ -1090,6 +1109,22 @@
                         document.getElementById('signup-form').style.display = 'block';
                         document.getElementById('tab-login').classList.remove('active');
                         document.getElementById('tab-signup').classList.add('active');
+                    }
+                },
+                
+                // ========================================================
+                // !!! YENİ FONKSİYON: Şifreyi Göster/Gizle !!!
+                // ========================================================
+                togglePasswordVisibility(fieldId, icon) {
+                    const input = document.getElementById(fieldId);
+                    if (input.type === "password") {
+                        input.type = "text";
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.type = "password";
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
                     }
                 }
             },
