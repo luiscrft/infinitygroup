@@ -488,11 +488,9 @@
                     
                     this.renderNews(this.state.liveNews ? this.state.liveNews.news : this.fallbackData.news.news, !this.state.liveNews);
 
-                    // renderAdminPanelConvoys'u çağırmadan önce state.isAdmin'in dolu olduğundan emin ol
-                    // init() içindeki auth.init() bunu halledecek, ancak ilk yüklemede gecikebilir
-                    // Bu yüzden auth.updateUI() içine taşıyacağız
+                    // Bu fonksiyon artık App.auth.updateUI() içinden çağrılıyor
                     if(this.state.isAdmin) {
-                         this.renderAdminPanelConvoys(ownEvents || this.fallbackData.convoys.filter(c => c.vtc.id === 83171));
+                         this.renderAdminPanelConvoys(allEvents.length > 0 ? allEvents : this.fallbackData.convoys);
                     }
                     
                     this.setupScrollAnimations(true);
@@ -773,7 +771,7 @@
                          container = document.getElementById('modal-container');
                          modalMaxWidth = 'max-w-4xl';
                          
-                         // BU ESKİ SİSTEM ARTIK DEVRE DIŞI. YENİ SİSTEM İÇİN VTC LİDERLERİ GİRİŞ YAPMALI.
+                         // BU ESKİ SİSTEM ARTIK DEVRE DIŞI.
                          content = `
                             <div class="flex justify-between items-start mb-6">
                                 <h2 class="text-3xl font-bold text-white">Slot Selection</h2>
@@ -954,14 +952,12 @@
                     }
 
                     if (authData.user) {
-                        // Trigger'ın ID'yi eklemesini beklemeyeceğiz, direkt biz güncelliyoruz.
-                        // Not: Trigger hala çalışıyor ve ID'yi ekliyor olmalı.
+                        // SQL Trigger'ı zaten ID'yi kopyaladı. Biz şimdi kalan bilgileri güncelliyoruz.
                         const { error: profileError } = await _supabase
                             .from('profiles')
                             .update({
                                 username: username,
                                 vtc_name: vtc_name
-                                // role zaten 'vtc_leader' olarak varsayılan
                             })
                             .eq('id', authData.user.id);
                             
@@ -976,6 +972,9 @@
                     }
                 },
                 
+                // ========================================================
+                // !!! GİRİŞ FONKSİYONU GÜNCELLENDİ (SORUN 1 & 2 İÇİN) !!!
+                // ========================================================
                 async signIn(event) {
                     event.preventDefault();
                     const email = document.getElementById('login-email').value;
@@ -983,21 +982,45 @@
                     const errorEl = document.getElementById('auth-error');
                     errorEl.style.display = 'none';
 
-                    const { error } = await _supabase.auth.signInWithPassword({
+                    // 1. Giriş yapmayı dene
+                    const { data, error } = await _supabase.auth.signInWithPassword({
                         email: email,
                         password: password,
                     });
 
                     if (error) {
+                        // Hata varsa göster
                         errorEl.textContent = `Login Error: ${error.message}`;
                         errorEl.style.display = 'block';
-                    } else {
+                    } else if (data.user) {
+                        // BAŞARILI!
+                        // 2. Kullanıcı bilgilerini ve profili ANINDA çek
+                        let { data: profile, error: profileError } = await _supabase
+                            .from('profiles')
+                            .select('username, vtc_name, role')
+                            .eq('id', data.user.id)
+                            .single();
+                        
+                        if (profile) {
+                            // 3. State'i anında güncelle
+                            App.state.currentUser = { ...data.user, ...profile };
+                            App.state.isAdmin = (profile.role === 'admin');
+                        } else {
+                            App.state.currentUser = data.user;
+                            if(profileError) console.error("Error fetching profile after login:", profileError.message);
+                        }
+                        
+                        // 4. Arayüzü anında güncelle
+                        App.auth.updateUI();
+                        
+                        // 5. Modalı kapat
                         App.modals.close('auth');
                     }
                 },
                 
                 async signOut() {
                     await _supabase.auth.signOut();
+                    // onAuthStateChange zaten tetiklenecek ve UI'ı güncelleyecek
                     App.navigate('anasayfa', document.querySelector('a[href="#anasayfa"]'));
                 },
                 
@@ -1013,19 +1036,22 @@
                     const authButtonsMobile = document.getElementById('auth-buttons-mobile');
                     const welcomeMsgMobile = document.getElementById('welcome-message-mobile');
                     
+                    // Admin linklerini ve panelini sadece admin ise göster/render et
                     document.getElementById('admin-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-mobile-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-footer-link').style.display = isAdmin ? 'block' : 'none';
                     
-                    // Admin panelini sadece admin ise render et
                     if(isAdmin) {
+                        // API verisi hazırsa admin panelini render et
                         App.renderAdminPanelConvoys(App.state.liveConvoys.length > 0 ? App.state.liveConvoys : App.fallbackData.convoys);
                     } else {
+                        // Admin değilse admin panelini temizle
                         const adminList = document.getElementById('admin-convoy-list');
-                        if(adminList) adminList.innerHTML = ''; // Admin değilse paneli temizle
+                        if(adminList) adminList.innerHTML = ''; 
                     }
 
                     if (user) {
+                        // Giriş yapılmış
                         const displayName = user.username || (user.email ? user.email.split('@')[0] : 'User');
                         welcomeMsg.textContent = `Welcome, ${displayName}`;
                         userInfo.style.display = 'flex';
@@ -1035,11 +1061,8 @@
                         userInfoMobile.style.display = 'block';
                         authButtonsMobile.style.display = 'none';
                         
-                        // Admin ise ve anasayfada değilse admin paneline yönlendir
-                        if (isAdmin && !document.getElementById('anasayfa').classList.contains('active')) {
-                             App.navigate('admin', document.querySelector('a[href="#admin"]'));
-                        }
                     } else {
+                        // Giriş yapılmamış
                         userInfo.style.display = 'none';
                         authButtons.style.display = 'block';
                         
@@ -1109,7 +1132,7 @@
                     departure: "Departure:",
                     arrival: "Arrival:",
                     server: "Server:",
-                    selectSlot: "Book Slot", // Butonun adı değişti
+                    selectSlot: "Book Slot", 
                     teamTitle: "Our Team",
                     teamSubtitle: "The amazing people who make up Iиfıиıтч Gяσuρ®.",
                     loadingTeam: "Loading team list...",
@@ -1133,7 +1156,7 @@
                     footerSitemap: "Sitemap",
                     footerSocial: "Social Media",
                     footerRights: "All rights reserved.",
-                    slotSelectInfo: "This feature is being upgraded. Please login as a VTC Leader to book a slot.", // Eski modal için uyarı
+                    slotSelectInfo: "This feature is being upgraded. Please login as a VTC Leader to book a slot.",
                     adminSlotInfo: "(Admin: You can edit occupied slots)",
                     bookSlot: "Slot {slotId} - Book",
                     slotTakenBy: "Taken by: {user}",
@@ -1141,7 +1164,7 @@
                     slotAlreadyTaken: "This slot is already taken.",
                     adminSlotActionPrompt: "Current user: {current}. Enter new username or leave empty to clear slot:",
                     slotUsernamePrompt: "Enter your username for Slot {slotId}:",
-                    adminTitle: "Admin Panel", // Değişti
+                    adminTitle: "Admin Panel",
                     adminSubtitle: "Convoy Slot Management",
                     loadingAdminConvoys: "Loading convoys to manage...",
                     noAdminConvoys: "No convoys found to manage.",
@@ -1168,6 +1191,8 @@
                         }
                     });
                      
+                     // Bu eski slot sistemi (localStorage) artık kullanılmıyor,
+                     // ama bir hata vermemesi için şimdilik bırakıyorum.
                      const slotGrid = document.getElementById('slot-grid');
                      if(slotGrid){
                          slotGrid.querySelectorAll('.slot').forEach(slot => {
