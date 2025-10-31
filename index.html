@@ -423,7 +423,7 @@
                 try {
                     const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=`;
                     const response = await fetch(proxyUrl + url, {
-                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V18' } 
+                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V19' } // Versiyon güncellendi
                     });
                     if (!response.ok) throw new Error(`API request failed: ${response.status}`);
                     const data = await response.json();
@@ -488,7 +488,6 @@
                     
                     this.renderNews(this.state.liveNews ? this.state.liveNews.news : this.fallbackData.news.news, !this.state.liveNews);
 
-                    // Bu fonksiyon artık App.auth.updateUI() içinden çağrılıyor
                     if(this.state.isAdmin) {
                          this.renderAdminPanelConvoys(allEvents.length > 0 ? allEvents : this.fallbackData.convoys);
                     }
@@ -890,8 +889,6 @@
                  }
             },
 
-            // renderSlots FOKSİYONU SİLİNDİ (Artık Gerekli Değil)
-
             slots: {
                  // ESKİ SİSTEM (YENİSİYLE DEĞİŞTİ)
                  select(convoyId, slotId) {
@@ -904,33 +901,54 @@
                  return data.filter(c => c && c.vtc?.id === 83171);
              },
             
+            // ========================================================
+            // !!! TAMAMEN GÜNCELLENMİŞ AUTH BÖLÜMÜ !!!
+            // ========================================================
             auth: {
                 init() {
+                    // Sayfa yüklendiğinde ve her giriş/çıkışta durumu dinle
                     _supabase.auth.onAuthStateChange(async (event, session) => {
-                        console.log('Auth State Change:', event, session);
-                        if (session && session.user) {
-                            let { data: profile, error } = await _supabase
-                                .from('profiles')
-                                .select('username, vtc_name, role')
-                                .eq('id', session.user.id)
-                                .single();
-                                
-                            if (error) {
-                                console.error('Error fetching profile:', error.message);
-                                App.state.currentUser = session.user; // Profili olmasa bile kullanıcıyı ayarla
-                            } else if (profile) {
-                                App.state.currentUser = { ...session.user, ...profile };
-                                App.state.isAdmin = (profile.role === 'admin');
-                                console.log('Current User Profile:', App.state.currentUser);
+                        console.log('Auth State Change:', event);
+                        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+                            if (session && session.user) {
+                                // Kullanıcı giriş yapmış, profilini çek
+                                await this.getProfile(session.user);
                             }
-                        } else {
+                        } else if (event === 'SIGNED_OUT') {
+                            // Kullanıcı çıkış yapmış
                             App.state.currentUser = null;
                             App.state.isAdmin = false;
                         }
-                        App.auth.updateUI(); // Arayüzü her durumda güncelle
+                        // Arayüzü her durumda güncelle
+                        this.updateUI();
                     });
                 },
                 
+                // Profil bilgilerini çeken ve state'i güncelleyen yardımcı fonksiyon
+                async getProfile(user) {
+                    try {
+                        let { data: profile, error } = await _supabase
+                            .from('profiles')
+                            .select('username, vtc_name, role')
+                            .eq('id', user.id)
+                            .single();
+                            
+                        if (error) {
+                            console.error('Error fetching profile:', error.message);
+                            App.state.currentUser = user; // Profili olmasa bile kullanıcıyı ayarla
+                        } else if (profile) {
+                            App.state.currentUser = { ...user, ...profile };
+                            App.state.isAdmin = (profile.role === 'admin');
+                            console.log('Current User Profile:', App.state.currentUser);
+                        }
+                    } catch (e) {
+                        console.error("Error in getProfile:", e);
+                    }
+                },
+                
+                // ========================================================
+                // !!! BASİTLEŞTİRİLMİŞ KAYIT (SIGN UP) FONKSİYONU !!!
+                // ========================================================
                 async signUp(event) {
                     event.preventDefault();
                     const username = document.getElementById('signup-username').value;
@@ -940,40 +958,33 @@
                     const errorEl = document.getElementById('auth-error');
                     errorEl.style.display = 'none';
 
-                    const { data: authData, error: authError } = await _supabase.auth.signUp({
+                    // Bilgiyi `options.data` ile yolla, SQL trigger'ı gerisini halledecek
+                    const { data, error } = await _supabase.auth.signUp({
                         email: email,
-                        password: password
+                        password: password,
+                        options: {
+                            data: {
+                                username: username,
+                                vtc_name: vtc_name
+                                // 'role' SQL trigger'ı tarafından otomatik 'vtc_leader' olarak ayarlanacak
+                            }
+                        }
                     });
 
-                    if (authError) {
-                        errorEl.textContent = `Sign Up Error: ${authError.message}`;
+                    if (error) {
+                        errorEl.textContent = `Sign Up Error: ${error.message}`;
                         errorEl.style.display = 'block';
                         return;
                     }
-
-                    if (authData.user) {
-                        // SQL Trigger'ı zaten ID'yi kopyaladı. Biz şimdi kalan bilgileri güncelliyoruz.
-                        const { error: profileError } = await _supabase
-                            .from('profiles')
-                            .update({
-                                username: username,
-                                vtc_name: vtc_name
-                            })
-                            .eq('id', authData.user.id);
-                            
-                        if (profileError) {
-                            errorEl.textContent = `Profile Update Error: ${profileError.message}`;
-                            errorEl.style.display = 'block';
-                            return;
-                        }
-                        
-                        alert('Sign up successful! Please check your email to verify your account.');
-                        App.modals.close('auth');
-                    }
+                    
+                    // Başarılı! .update() KISMI TAMAMEN KALDIRILDI.
+                    // SQL Trigger'ı tüm işi yaptı.
+                    alert('Sign up successful! Please check your email to verify your account (if enabled).');
+                    App.modals.close('auth');
                 },
                 
                 // ========================================================
-                // !!! GİRİŞ FONKSİYONU GÜNCELLENDİ (SORUN 1 & 2 İÇİN) !!!
+                // !!! GÜNCELLENMİŞ GİRİŞ (SIGN IN) FONKSİYONU !!!
                 // ========================================================
                 async signIn(event) {
                     event.preventDefault();
@@ -995,26 +1006,13 @@
                     } else if (data.user) {
                         // BAŞARILI!
                         // 2. Kullanıcı bilgilerini ve profili ANINDA çek
-                        let { data: profile, error: profileError } = await _supabase
-                            .from('profiles')
-                            .select('username, vtc_name, role')
-                            .eq('id', data.user.id)
-                            .single();
+                        // (onAuthStateChange'i bekleme, anında yap)
+                        await this.getProfile(data.user);
                         
-                        if (profile) {
-                            // 3. State'i anında güncelle
-                            App.state.currentUser = { ...data.user, ...profile };
-                            App.state.isAdmin = (profile.role === 'admin');
-                        } else {
-                            // Profili (henüz) yoksa bile temel kullanıcıyı ayarla
-                            App.state.currentUser = data.user;
-                            if(profileError) console.error("Error fetching profile after login:", profileError.message);
-                        }
+                        // 3. Arayüzü anında güncelle
+                        this.updateUI();
                         
-                        // 4. Arayüzü anında güncelle
-                        App.auth.updateUI();
-                        
-                        // 5. Modalı kapat
+                        // 4. Modalı kapat
                         App.modals.close('auth');
                     }
                 },
@@ -1037,22 +1035,20 @@
                     const authButtonsMobile = document.getElementById('auth-buttons-mobile');
                     const welcomeMsgMobile = document.getElementById('welcome-message-mobile');
                     
-                    // Admin linklerini ve panelini sadece admin ise göster/render et
                     document.getElementById('admin-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-mobile-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-footer-link').style.display = isAdmin ? 'block' : 'none';
                     
                     if(isAdmin) {
-                        // API verisi hazırsa admin panelini render et
                         App.renderAdminPanelConvoys(App.state.liveConvoys.length > 0 ? App.state.liveConvoys : App.fallbackData.convoys);
                     } else {
-                        // Admin değilse admin panelini temizle
                         const adminList = document.getElementById('admin-convoy-list');
                         if(adminList) adminList.innerHTML = ''; 
                     }
 
                     if (user) {
                         // Giriş yapılmış
+                        // Profil 'username'i varsa onu, yoksa e-postayı göster
                         const displayName = user.username || (user.email ? user.email.split('@')[0] : 'User');
                         welcomeMsg.textContent = `Welcome, ${displayName}`;
                         userInfo.style.display = 'flex';
@@ -1192,7 +1188,6 @@
                         }
                     });
                      
-                     // Bu eski slot sistemi (localStorage) artık kullanılmıyor
                      const slotGrid = document.getElementById('slot-grid');
                      if(slotGrid){
                          //... (eski slot render kodu şimdilik kalabilir, bir zararı yok)
