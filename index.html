@@ -382,7 +382,7 @@
         
         const App = {
             state: {
-                bookedSlots: JSON.parse(localStorage.getItem('bookedSlots')) || {}, // Bu yakında silinecek
+                bookedSlots: JSON.parse(localStorage.getItem('bookedSlots')) || {},
                 isAdmin: false, 
                 currentUser: null, 
                 liveConvoys: [],
@@ -423,7 +423,7 @@
                 try {
                     const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=`;
                     const response = await fetch(proxyUrl + url, {
-                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V19' } // Versiyon güncellendi
+                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V19' } 
                     });
                     if (!response.ok) throw new Error(`API request failed: ${response.status}`);
                     const data = await response.json();
@@ -472,7 +472,7 @@
                     }
                     const allEvents = Array.from(uniqueEventsMap.values());
                     
-                    this.state.liveConvoys = allEvents; // Canlı konvoyları state'e kaydet
+                    this.state.liveConvoys = allEvents;
                     const futureEvents = allEvents.filter(event => event && event.start_at && new Date(event.start_at) > new Date());
                     stats.convoys = futureEvents.length;
 
@@ -906,14 +906,11 @@
             // ========================================================
             auth: {
                 init() {
-                    // Sayfa yüklendiğinde ve her giriş/çıkışta durumu dinle
                     _supabase.auth.onAuthStateChange(async (event, session) => {
                         console.log('Auth State Change:', event);
-                        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-                            if (session && session.user) {
-                                // Kullanıcı giriş yapmış, profilini çek
-                                await this.getProfile(session.user);
-                            }
+                        if (session && session.user && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+                            // Kullanıcı giriş yapmış veya oturumu devam ediyor, profilini çek
+                            await this.getProfile(session.user);
                         } else if (event === 'SIGNED_OUT') {
                             // Kullanıcı çıkış yapmış
                             App.state.currentUser = null;
@@ -924,7 +921,6 @@
                     });
                 },
                 
-                // Profil bilgilerini çeken ve state'i güncelleyen yardımcı fonksiyon
                 async getProfile(user) {
                     try {
                         let { data: profile, error } = await _supabase
@@ -935,11 +931,16 @@
                             
                         if (error) {
                             console.error('Error fetching profile:', error.message);
-                            App.state.currentUser = user; // Profili olmasa bile kullanıcıyı ayarla
+                            App.state.currentUser = user; 
                         } else if (profile) {
                             App.state.currentUser = { ...user, ...profile };
                             App.state.isAdmin = (profile.role === 'admin');
                             console.log('Current User Profile:', App.state.currentUser);
+                        } else {
+                            // Bu durum, trigger'ın henüz çalışmadığı bir "race condition" olabilir.
+                            // Kullanıcıyı ayarla, ancak profil bilgisi yok.
+                            App.state.currentUser = user;
+                            console.warn("User logged in, but profile data is not ready yet.");
                         }
                     } catch (e) {
                         console.error("Error in getProfile:", e);
@@ -947,7 +948,7 @@
                 },
                 
                 // ========================================================
-                // !!! BASİTLEŞTİRİLMİŞ KAYIT (SIGN UP) FONKSİYONU !!!
+                // !!! GÜNCELLENMİŞ KAYIT (SIGN UP) FONKSİYONU !!!
                 // ========================================================
                 async signUp(event) {
                     event.preventDefault();
@@ -977,8 +978,7 @@
                         return;
                     }
                     
-                    // Başarılı! .update() KISMI TAMAMEN KALDIRILDI.
-                    // SQL Trigger'ı tüm işi yaptı.
+                    // Başarılı! SQL Trigger'ı tüm işi yaptı.
                     alert('Sign up successful! Please check your email to verify your account (if enabled).');
                     App.modals.close('auth');
                 },
@@ -1018,9 +1018,16 @@
                 },
                 
                 async signOut() {
-                    await _supabase.auth.signOut();
-                    // onAuthStateChange zaten tetiklenecek ve UI'ı güncelleyecek
-                    App.navigate('anasayfa', document.querySelector('a[href="#anasayfa"]'));
+                    const { error } = await _supabase.auth.signOut();
+                    if(error) {
+                        console.error("Sign out error:", error);
+                    } else {
+                        // State'i anında temizle ve UI'ı güncelle
+                        App.state.currentUser = null;
+                        App.state.isAdmin = false;
+                        this.updateUI();
+                        App.navigate('anasayfa', document.querySelector('a[href="#anasayfa"]'));
+                    }
                 },
                 
                 updateUI() {
@@ -1035,6 +1042,7 @@
                     const authButtonsMobile = document.getElementById('auth-buttons-mobile');
                     const welcomeMsgMobile = document.getElementById('welcome-message-mobile');
                     
+                    // Admin linklerini ve panelini sadece admin ise göster/render et
                     document.getElementById('admin-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-mobile-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-footer-link').style.display = isAdmin ? 'block' : 'none';
