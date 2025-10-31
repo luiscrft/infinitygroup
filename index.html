@@ -291,7 +291,7 @@
                  </a>
              </div>
             <div class="columns-2 md:columns-3 gap-4 space-y-4">
-                <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop" class="rounded-lg shadow-lg break-inside-avoid" alt="Gallery Photo 1">
+                <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d_5957?q=80&w=2069&auto=format&fit=crop" class="rounded-lg shadow-lg break-inside-avoid" alt="Gallery Photo 1">
                 <img src="https://images.unsplash.com/photo-1621418721094-a131a40a5f7e?q=80&w=1974&auto=format&fit=crop" class="rounded-lg shadow-lg break-inside-avoid" alt="Gallery Photo 2">
                 <img src="https://images.unsplash.com/photo-1603783038319-c5f35f299052?q=80&w=2070&auto=format&fit=crop" class="rounded-lg shadow-lg break-inside-avoid" alt="Gallery Photo 3">
                 <img src="https://images.unsplash.com/photo-1623281121832-3bf9e8a7f72b?q=80&w=1964&auto=format&fit=crop" class="rounded-lg shadow-lg break-inside-avoid" alt="Gallery Photo 4">
@@ -432,7 +432,7 @@
                 try {
                     const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=`;
                     const response = await fetch(proxyUrl + url, {
-                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V20' } // Versiyon güncellendi
+                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V21' } // Versiyon güncellendi
                     });
                     if (!response.ok) throw new Error(`API request failed: ${response.status}`);
                     const data = await response.json();
@@ -908,6 +908,7 @@
             },
 
             slots: {
+                 // ESKİ SİSTEM (YENİSİYLE DEĞİŞTİ)
                  select(convoyId, slotId) {
                      alert('This booking system is being upgraded! Please login as a VTC Leader.');
                  }
@@ -956,8 +957,6 @@
                             App.state.isAdmin = (profile.role === 'admin');
                             console.log('Current User Profile:', App.state.currentUser);
                         } else {
-                            // Bu durum, trigger'ın henüz çalışmadığı bir "race condition" olabilir.
-                            // Kullanıcıyı ayarla, ancak profil bilgisi yok.
                             App.state.currentUser = user;
                             console.warn("User logged in, but profile data is not ready yet (race condition).");
                         }
@@ -986,7 +985,6 @@
                             data: {
                                 username: username,
                                 vtc_name: vtc_name
-                                // 'role' SQL trigger'ı tarafından otomatik 'vtc_leader' olarak ayarlanacak
                             }
                         }
                     });
@@ -997,18 +995,24 @@
                         return;
                     }
                     
-                    // Başarılı! SQL Trigger'ı tüm işi yaptı.
-                    alert('Sign up successful! Please check your email to verify your account (if enabled).');
-                    App.modals.close('auth');
+                    // KAYIT BAŞARILI, ŞİMDİ OTOMATİK GİRİŞ YAP
+                    errorEl.textContent = "Sign up successful! Logging you in...";
+                    errorEl.style.display = "block";
+                    errorEl.classList.remove('text-red-400', 'bg-red-500/10');
+                    errorEl.classList.add('text-green-400', 'bg-green-500/10');
+                    
+                    // Otomatik giriş yapmak için signIn fonksiyonunu çağır
+                    await this.signIn(event, email, password);
                 },
                 
                 // ========================================================
                 // !!! GÜNCELLENMİŞ GİRİŞ (SIGN IN) FONKSİYONU !!!
                 // ========================================================
-                async signIn(event) {
-                    event.preventDefault();
-                    const email = document.getElementById('login-email').value;
-                    const password = document.getElementById('login-password').value;
+                async signIn(event, emailOverride = null, passwordOverride = null) {
+                    if (event) event.preventDefault();
+                    
+                    const email = emailOverride || document.getElementById('login-email').value;
+                    const password = passwordOverride || document.getElementById('login-password').value;
                     const errorEl = document.getElementById('auth-error');
                     errorEl.style.display = 'none';
 
@@ -1025,7 +1029,6 @@
                     } else if (data.user) {
                         // BAŞARILI!
                         // 2. Kullanıcı bilgilerini ve profili ANINDA çek
-                        // (onAuthStateChange'i bekleme, anında yap)
                         await this.getProfile(data.user);
                         
                         // 3. Arayüzü anında güncelle
@@ -1061,7 +1064,6 @@
                     const authButtonsMobile = document.getElementById('auth-buttons-mobile');
                     const welcomeMsgMobile = document.getElementById('welcome-message-mobile');
                     
-                    // Admin linklerini ve panelini sadece admin ise göster/render et
                     document.getElementById('admin-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-mobile-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-footer-link').style.display = isAdmin ? 'block' : 'none';
