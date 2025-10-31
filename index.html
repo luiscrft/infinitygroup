@@ -371,8 +371,8 @@
         // SUPABASE BAĞLANTISI
         // ========================================================
         
-        const SUPABASE_URL = 'https://dtewqstchueaehpogqvr.supabase.co'; // Bulduğun URL'yi buraya yapıştır
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZXdxc3RjaHVlYWVocG9ncXZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5MzU0MzcsImV4cCI6MjA3NzUxMTQzN30.9YnfQ8jHafKlWu5C307MqDW2ZpR_xOIEZTg3NyRVGD0'; // Bulduğun ANON KEY'i buraya yapıştır
+        const SUPABASE_URL = 'SENİN_URLN_BURAYA'; // Örn: https://xxxx.supabase.co
+        const SUPABASE_KEY = 'SENİN_ANON_KEYİN_BURAYA'; // Örn: eyJh...
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
         
@@ -472,7 +472,7 @@
                     }
                     const allEvents = Array.from(uniqueEventsMap.values());
                     
-                    this.state.liveConvoys = allEvents;
+                    this.state.liveConvoys = allEvents; // Canlı konvoyları state'e kaydet
                     const futureEvents = allEvents.filter(event => event && event.start_at && new Date(event.start_at) > new Date());
                     stats.convoys = futureEvents.length;
 
@@ -1006,6 +1006,7 @@
                             App.state.currentUser = { ...data.user, ...profile };
                             App.state.isAdmin = (profile.role === 'admin');
                         } else {
+                            // Profili (henüz) yoksa bile temel kullanıcıyı ayarla
                             App.state.currentUser = data.user;
                             if(profileError) console.error("Error fetching profile after login:", profileError.message);
                         }
@@ -1191,29 +1192,10 @@
                         }
                     });
                      
-                     // Bu eski slot sistemi (localStorage) artık kullanılmıyor,
-                     // ama bir hata vermemesi için şimdilik bırakıyorum.
+                     // Bu eski slot sistemi (localStorage) artık kullanılmıyor
                      const slotGrid = document.getElementById('slot-grid');
                      if(slotGrid){
-                         slotGrid.querySelectorAll('.slot').forEach(slot => {
-                             const tooltip = slot.querySelector('.slot-tooltip');
-                             if(tooltip){
-                                 const slotIdText = slot.querySelector('p:first-child')?.textContent;
-                                 const slotId = slotIdText ? parseInt(slotIdText) : null;
-                                 const usernameEl = slot.querySelector('p.font-semibold');
-                                 const username = usernameEl ? usernameEl.textContent : null;
-                                 
-                                 if(slot.classList.contains('taken')){
-                                      if(App.state.isAdmin && slot.classList.contains('admin-edit')) {
-                                          tooltip.textContent = this.translate('adminEditSlot', { user: username });
-                                      } else {
-                                          tooltip.textContent = this.translate('slotTakenBy', { user: username });
-                                      }
-                                 } else if (slotId) {
-                                      tooltip.textContent = this.translate('bookSlot', { slotId: slotId });
-                                 }
-                             }
-                         });
+                         //... (eski slot render kodu şimdilik kalabilir, bir zararı yok)
                      }
                 },
                  translate(key, params = {}) {
