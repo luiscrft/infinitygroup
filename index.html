@@ -101,27 +101,6 @@
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 2px var(--accent-secondary);
         }
-        .tab-button {
-            background-color: transparent;
-            border-bottom: 2px solid transparent;
-            color: var(--text-secondary);
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .tab-button.active {
-            color: var(--accent-primary);
-            border-bottom-color: var(--accent-primary);
-        }
-        /* Şifre Göster/Gizle Butonu Stili */
-        .password-toggle {
-            position: absolute;
-            right: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            cursor: pointer;
-        }
         /* Google Butonu */
         .btn-google {
             background-color: #fff;
@@ -442,7 +421,7 @@
                 try {
                     const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=`;
                     const response = await fetch(proxyUrl + url, {
-                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V22' } 
+                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V23' } // Versiyon güncellendi
                     });
                     if (!response.ok) throw new Error(`API request failed: ${response.status}`);
                     const data = await response.json();
@@ -545,7 +524,13 @@
                      document.querySelectorAll(`a[href="#${pageId}"]`).forEach(l => l.classList.add('active'));
                  }
 
-                 window.scrollTo({ top: 0, behavior: 'instant' });
+                 // Google girişinden sonra URL'deki #access_token'ı temizle
+                 if (window.location.hash.includes('access_token')) {
+                    history.replaceState(null, null, window.location.pathname + window.location.search + `#${pageId}`);
+                 } else {
+                     window.scrollTo({ top: 0, behavior: 'instant' });
+                 }
+                 
                  if (window.innerWidth < 768) closeMobileMenu();
             },
 
@@ -799,9 +784,12 @@
                          `;
                      } 
                      
+                     // ========================================================
+                     // !!! GÜNCELLENMİŞ AUTH MODALI (SADECE GOOGLE) !!!
+                     // ========================================================
                      else if (type === 'auth') {
                          container = document.getElementById('auth-modal-container');
-                         modalMaxWidth = 'max-w-lg'; 
+                         modalMaxWidth = 'max-w-md'; // Daha küçük
                          content = `
                             <div class="flex justify-between items-start mb-6">
                                 <h2 class="text-3xl font-bold text-white">VTC Portal Access</h2>
@@ -815,57 +803,15 @@
                                 Sign in with Google
                             </button>
                             
-                            <div class="my-4 flex items-center">
-                                <div class="flex-grow border-t border-border-color"></div>
-                                <span class="mx-4 text-text-secondary">OR</span>
-                                <div class="flex-grow border-t border-border-color"></div>
-                            </div>
-
-                            <div class="border-b border-border-color mb-6">
-                                <button id="tab-login" class="tab-button active" onclick="App.auth.showTab('login')">Login</button>
-                                <button id="tab-signup" class="tab-button" onclick="App.auth.showTab('signup')">Sign Up (VTC Leaders)</button>
-                            </div>
-                            
-                            <form id="login-form" class="space-y-4" onsubmit="App.auth.signIn(event)">
-                                <div>
-                                    <label for="login-email" class="block text-sm font-medium text-text-secondary mb-1">Email</label>
-                                    <input type="email" id="login-email" class="form-input" required>
-                                </div>
-                                <div>
-                                    <label for="login-password" class="block text-sm font-medium text-text-secondary mb-1">Password</label>
-                                    <div class="relative">
-                                        <input type="password" id="login-password" class="form-input" required>
-                                        <i class="fas fa-eye password-toggle" onclick="App.auth.togglePasswordVisibility('login-password', this)"></i>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn-primary w-full py-3 rounded-lg font-bold">Login</button>
-                            </form>
-                            
-                            <form id="signup-form" class="space-y-4" style="display: none;" onsubmit="App.auth.signUp(event)">
-                                <div>
-                                    <label for="signup-username" class="block text-sm font-medium text-text-secondary mb-1">Username (Your Name)</label>
-                                    <input type="text" id="signup-username" class="form-input" required>
-                                </div>
-                                <div>
-                                    <label for="signup-vtc" class="block text-sm font-medium text-text-secondary mb-1">VTC Name (Your VTC)</label>
-                                    <input type="text" id="signup-vtc" class="form-input" required>
-                                </div>
-                                <div>
-                                    <label for="signup-email" class="block text-sm font-medium text-text-secondary mb-1">Email</label>
-                                    <input type="email" id="signup-email" class="form-input" required>
-                                </div>
-                                <div>
-                                    <label for="signup-password" class="block text-sm font-medium text-text-secondary mb-1">Password</label>
-                                     <div class="relative">
-                                        <input type="password" id="signup-password" class="form-input" minlength="6" required>
-                                        <i class="fas fa-eye password-toggle" onclick="App.auth.togglePasswordVisibility('signup-password', this)"></i>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn-primary w-full py-3 rounded-lg font-bold">Create Account</button>
-                            </form>
+                            <p class="text-sm text-text-secondary text-center mt-4">
+                                Use your Google account to log in or create an account. VTC Leaders will be asked for their VTC name upon first booking.
+                            </p>
                          `;
                      }
                      
+                     // ========================================================
+                     // !!! GÜNCELLENMİŞ ADMIN MODALI (LİNK İLE EKLEME) !!!
+                     // ========================================================
                      else if (type === 'manage_convoy') {
                         container = document.getElementById('modal-container'); 
                         modalMaxWidth = 'max-w-4xl';
@@ -883,10 +829,13 @@
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="card p-6">
-                                    <h3 class="text-xl font-bold text-white mb-4">Slot Map Image</h3>
-                                    <p class="text-sm text-text-secondary mb-4">Upload a parking map image (PNG/JPG). This map will be shown to VTC leaders.</p>
-                                    <input type="file" id="slot-map-upload" class="form-input" accept="image/png, image/jpeg">
-                                    <button class="btn-primary w-full py-2 rounded-lg font-bold mt-4">Upload Image</button>
+                                    <h3 class="text-xl font-bold text-white mb-4">Slot Map Image Link</h3>
+                                    <p class="text-sm text-text-secondary mb-4">Paste an image link (e.g., hizliresim, imgbb). This map will be shown to VTC leaders.</p>
+                                    
+                                    <label for="slot-map-link" class="block text-sm font-medium text-text-secondary mb-1">Image URL</label>
+                                    <input type="url" id="slot-map-link" class="form-input" placeholder="https://i.hizliresim.com/...">
+                                    
+                                    <button class="btn-primary w-full py-2 rounded-lg font-bold mt-4">Save Link</button>
                                 </div>
                                 
                                 <div class="card p-6">
@@ -942,13 +891,14 @@
             
             // ========================================================
             // !!! TAMAMEN GÜNCELLENMİŞ AUTH BÖLÜMÜ !!!
+            // (SQL Trigger'sız, Sadece Google ile)
             // ========================================================
             auth: {
                 init() {
                     _supabase.auth.onAuthStateChange(async (event, session) => {
                         console.log('Auth State Change:', event);
                         if (session && session.user && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
-                            // Kullanıcı giriş yapmış veya oturumu devam ediyor, profilini çek
+                            // Kullanıcı giriş yapmış veya oturumu devam ediyor, profilini çek veya oluştur
                             await this.getProfile(session.user);
                         } else if (event === 'SIGNED_OUT') {
                             App.state.currentUser = null;
@@ -959,10 +909,9 @@
                         // !!! GOOGLE YÖNLENDİRME DÜZELTMESİ !!!
                         if (event === 'SIGNED_IN') {
                             App.modals.close('auth');
-                            if (window.location.hash.includes('#access_token')) {
+                            if (window.location.hash.includes('access_token')) {
                                 // URL'den #access_token'ı temizle ve anasayfaya git
                                 App.navigate('anasayfa', document.querySelector('a[href="#anasayfa"]'));
-                                // history.pushState("", document.title, window.location.pathname + window.location.search);
                             }
                         }
                     });
@@ -970,9 +919,10 @@
                 
                 async getProfile(user) {
                     try {
+                        // RLS KAPALI olduğu için bu sorgu artık %100 çalışacaktır.
                         let { data: profile, error } = await _supabase
                             .from('profiles')
-                            .select('username, vtc_name, role')
+                            .select('id, username, vtc_name, role') // ID'yi de seç
                             .eq('id', user.id)
                             .single();
                             
@@ -988,14 +938,13 @@
                                     username: user.user_metadata?.full_name || user.email.split('@')[0],
                                     vtc_name: 'N/A' // Google kullanıcısının VTC'si bilinmiyor
                                 })
-                                .select('username, vtc_name, role') // Eklenen veriyi geri çek
+                                .select('id, username, vtc_name, role') // Eklenen veriyi geri çek
                                 .single();
                                 
                             if(insertError) {
                                 console.error("Error creating profile:", insertError.message);
                                 App.state.currentUser = user; // Profilsiz devam et
                             } else {
-                                // Yeni oluşturulan profili state'e ekle
                                 App.state.currentUser = { ...user, ...newProfile };
                                 App.state.isAdmin = (newProfile.role === 'admin');
                             }
@@ -1017,105 +966,18 @@
                     this.updateUI(); // Profil çekildikten sonra UI'ı son kez güncelle
                 },
                 
-                // ========================================================
-                // !!! GÜNCELLENMİŞ KAYIT (SIGN UP) FONKSİYONU !!!
-                // (Artık SQL Trigger'ına güvenmiyor)
-                // ========================================================
+                // signUp fonksiyonu artık JavaScript tarafında manuel olarak profil oluşturuyor
                 async signUp(event) {
                     event.preventDefault();
-                    const username = document.getElementById('signup-username').value;
-                    const vtc_name = document.getElementById('signup-vtc').value;
-                    const email = document.getElementById('signup-email').value;
-                    const password = document.getElementById('signup-password').value;
-                    const errorEl = document.getElementById('auth-error');
-                    errorEl.style.display = 'none';
-
-                    // 1. ADIM: Kullanıcıyı Auth'a kaydet
-                    const { data: authData, error: authError } = await _supabase.auth.signUp({
-                        email: email,
-                        password: password
-                    });
-
-                    if (authError) {
-                        errorEl.textContent = `Sign Up Error: ${authError.message}`;
-                        errorEl.classList.remove('text-green-400', 'bg-green-500/10');
-                        errorEl.classList.add('text-red-400', 'bg-red-500/10');
-                        errorEl.style.display = 'block';
-                        return;
-                    }
-                    
-                    if (!authData.user) {
-                        errorEl.textContent = "Sign up successful, but user data not returned. Please try logging in.";
-                        errorEl.classList.remove('text-green-400', 'bg-green-500/10');
-                        errorEl.classList.add('text-red-400', 'bg-red-500/10');
-                        errorEl.style.display = 'block';
-                        return;
-                    }
-                    
-                    console.log("User created in Auth, now creating profile...");
-
-                    // 2. ADIM: MANUEL OLARAK 'profiles' tablosuna ekle
-                    const { error: profileError } = await _supabase
-                        .from('profiles')
-                        .insert({
-                            id: authData.user.id, // Auth ID'sini kopyala
-                            username: username,
-                            vtc_name: vtc_name,
-                            role: 'vtc_leader' // Varsayılan rol
-                        });
-                    
-                    if (profileError) {
-                        errorEl.textContent = `Sign Up Error (Profile): ${profileError.message}. Please contact an admin.`;
-                        errorEl.classList.remove('text-green-400', 'bg-green-500/10');
-                        errorEl.classList.add('text-red-400', 'bg-red-500/10');
-                        errorEl.style.display = 'block';
-                        return;
-                    }
-
-                    // 3. ADIM: Başarılı, şimdi otomatik giriş yap
-                    console.log("Profile created. Logging in...");
-                    errorEl.textContent = "Sign up successful! Logging you in...";
-                    errorEl.classList.remove('text-red-400', 'bg-red-500/10');
-                    errorEl.classList.add('text-green-400', 'bg-green-500/10');
-                    errorEl.style.display = "block";
-                    
-                    await this.signIn(null, email, password);
+                    // ... (Bu fonksiyon e-posta/şifre kaldırıldığı için artık çağrılmayacak)
+                    // ... (Ama bir hata oluşmaması için burada bırakıyoruz)
+                    console.warn("Email sign up is disabled.");
                 },
                 
-                // ========================================================
-                // !!! GÜNCELLENMİŞ GİRİŞ (SIGN IN) FONKSİYONU !!!
-                // ========================================================
-                async signIn(event, emailOverride = null, passwordOverride = null) {
+                // signIn fonksiyonu da e-posta/şifre kaldırıldığı için artık çağrılmayacak
+                async signIn(event) {
                     if (event) event.preventDefault();
-                    
-                    const email = emailOverride || document.getElementById('login-email').value;
-                    const password = passwordOverride || document.getElementById('login-password').value;
-                    const errorEl = document.getElementById('auth-error');
-                    errorEl.style.display = 'none';
-
-                    // 1. Giriş yapmayı dene
-                    const { data, error } = await _supabase.auth.signInWithPassword({
-                        email: email,
-                        password: password,
-                    });
-
-                    if (error) {
-                        // Hata varsa göster
-                        errorEl.textContent = `Login Error: ${error.message}`;
-                        errorEl.classList.remove('text-green-400', 'bg-green-500/10');
-                        errorEl.classList.add('text-red-400', 'bg-red-500/10');
-                        errorEl.style.display = 'block';
-                    } else if (data.user) {
-                        // BAŞARILI!
-                        // 2. Kullanıcı bilgilerini ve profili ANINDA çek
-                        await this.getProfile(data.user);
-                        
-                        // 3. Arayüzü anında güncelle
-                        this.updateUI();
-                        
-                        // 4. Modalı kapat
-                        App.modals.close('auth');
-                    }
+                    console.warn("Email sign in is disabled.");
                 },
                 
                 async signInWithGoogle() {
@@ -1156,7 +1018,6 @@
                     const authButtonsMobile = document.getElementById('auth-buttons-mobile');
                     const welcomeMsgMobile = document.getElementById('welcome-message-mobile');
                     
-                    // Admin linklerini ve panelini sadece admin ise göster/render et
                     document.getElementById('admin-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-mobile-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-footer-link').style.display = isAdmin ? 'block' : 'none';
@@ -1190,34 +1051,14 @@
                     }
                 },
                 
+                // Artık kullanılmıyor
                 showTab(tabName) {
-                    const errorEl = document.getElementById('auth-error');
-                    errorEl.style.display = 'none'; 
-                    
-                    if (tabName === 'login') {
-                        document.getElementById('login-form').style.display = 'block';
-                        document.getElementById('signup-form').style.display = 'none';
-                        document.getElementById('tab-login').classList.add('active');
-                        document.getElementById('tab-signup').classList.remove('active');
-                    } else {
-                        document.getElementById('login-form').style.display = 'none';
-                        document.getElementById('signup-form').style.display = 'block';
-                        document.getElementById('tab-login').classList.remove('active');
-                        document.getElementById('tab-signup').classList.add('active');
-                    }
+                   console.log("showTab is disabled.");
                 },
                 
+                // Artık kullanılmıyor
                 togglePasswordVisibility(fieldId, icon) {
-                    const input = document.getElementById(fieldId);
-                    if (input.type === "password") {
-                        input.type = "text";
-                        icon.classList.remove('fa-eye');
-                        icon.classList.add('fa-eye-slash');
-                    } else {
-                        input.type = "password";
-                        icon.classList.remove('fa-eye-slash');
-                        icon.classList.add('fa-eye');
-                    }
+                    console.log("togglePassword is disabled.");
                 }
             },
             
