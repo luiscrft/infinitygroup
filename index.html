@@ -159,15 +159,15 @@
              <a href="#admin" id="admin-mobile-nav-link" style="display: none;" onclick="App.navigate('admin', this); closeMobileMenu()" class="nav-link block py-2 text-red-400 hover:text-red-300 font-medium" data-translate="navAdmin">Admin</a>
              
              <div id="user-info-mobile" class="hidden space-y-2">
-                <span id="welcome-message-mobile" class="block text-center text-text-secondary text-sm"></span>
-                <button onclick="App.auth.signOut(); closeMobileMenu();" class="block w-full btn-outline text-white font-bold py-2 px-4 rounded-lg transition duration-300 text-center">
-                    Logout
-                </button>
+                 <span id="welcome-message-mobile" class="block text-center text-text-secondary text-sm"></span>
+                 <button onclick="App.auth.signOut(); closeMobileMenu();" class="block w-full btn-outline text-white font-bold py-2 px-4 rounded-lg transition duration-300 text-center">
+                     Logout
+                 </button>
              </div>
              <div id="auth-buttons-mobile">
-                <a href="#basvuru" onclick="App.modals.open('auth'); closeMobileMenu();" class="block mt-2 btn-primary text-white font-bold py-2 px-4 rounded-lg transition duration-300 text-center" data-translate="applyNow">
-                    Login / Sign Up
-                </a>
+                 <a href="#basvuru" onclick="App.modals.open('auth'); closeMobileMenu();" class="block mt-2 btn-primary text-white font-bold py-2 px-4 rounded-lg transition duration-300 text-center" data-translate="applyNow">
+                     Login / Sign Up
+                 </a>
              </div>
         </div>
     </header>
@@ -227,17 +227,17 @@
                 </div>
             </div>
              <div id="latest-news-homepage" class="container mx-auto px-6 py-24">
-                </div>
+             </div>
              <section class="container mx-auto px-6 pb-24">
-                <div class="bg-gradient-to-r from-sky-500 to-sky-700 rounded-xl p-8 md:p-12 text-center text-white">
-                     <h2 class="text-3xl md:text-4xl font-bold tracking-tight" data-translate="ctaTitle">Ready to Join Us?</h2>
-                     <p class="mt-4 text-lg text-sky-100 max-w-2xl mx-auto" data-translate="ctaSubtitle">Visit our application page to become a part of our team and share this excitement.</p>
-                     <div class="mt-8">
-                         <a href="#basvuru" onclick="App.navigate('basvuru', document.querySelector('a[href=\'#basvuru\']'))" class="bg-white text-sky-600 hover:bg-sky-50 font-bold py-3 px-8 rounded-lg text-lg inline-block transition-colors" data-translate="ctaButton">
-                             Go to Application Page
-                         </a>
-                     </div>
-                </div>
+                 <div class="bg-gradient-to-r from-sky-500 to-sky-700 rounded-xl p-8 md:p-12 text-center text-white">
+                      <h2 class="text-3xl md:text-4xl font-bold tracking-tight" data-translate="ctaTitle">Ready to Join Us?</h2>
+                      <p class="mt-4 text-lg text-sky-100 max-w-2xl mx-auto" data-translate="ctaSubtitle">Visit our application page to become a part of our team and share this excitement.</p>
+                      <div class="mt-8">
+                          <a href="#basvuru" onclick="App.navigate('basvuru', document.querySelector('a[href=\'#basvuru\']'))" class="bg-white text-sky-600 hover:bg-sky-50 font-bold py-3 px-8 rounded-lg text-lg inline-block transition-colors" data-translate="ctaButton">
+                              Go to Application Page
+                          </a>
+                      </div>
+                 </div>
             </section>
         </section>
 
@@ -295,7 +295,7 @@
                  <p class="mt-4 text-lg text-text-secondary max-w-2xl mx-auto" data-translate="applySubtitle">Login or Sign Up to become part of our community and manage your convoy slots.</p>
                  <div class="mt-8">
                      <button onclick="App.modals.open('auth')" class="btn-primary text-white font-bold py-3 px-8 rounded-lg text-lg inline-block w-auto text-center">
-                        Login / Sign Up
+                         Login / Sign Up
                     </button>
                  </div>
             </div>
@@ -410,10 +410,10 @@
                 vtc: { members_count: 10 },
                 discord: { approximate_member_count: 150 },
                  news: {
-                    news: [
-                        {id: 1, title: "Our New Website is Live!", author: {username: "Management"}, published_at: "2025-10-20T10:00:00Z", content: "<p>Our VTC's new website is now live! We are here with a more modern and functional interface.</p>"},
-                        {id: 2, title: "October Convoy Schedule", author: {username: "Event Team"}, published_at: "2025-10-15T14:30:00Z", content: "<p>The list of convoys we will organize throughout October has been updated on our Convoys page.</p>"}
-                    ]
+                     news: [
+                         {id: 1, title: "Our New Website is Live!", author: {username: "Management"}, published_at: "2025-10-20T10:00:00Z", content: "<p>Our VTC's new website is now live! We are here with a more modern and functional interface.</p>"},
+                         {id: 2, title: "October Convoy Schedule", author: {username: "Event Team"}, published_at: "2025-10-15T14:30:00Z", content: "<p>The list of convoys we will organize throughout October has been updated on our Convoys page.</p>"}
+                     ]
                  }
             },
             
@@ -497,7 +497,12 @@
 
              init() {
                  this.language.apply(); 
-                 this.auth.init(); // GİRİŞ KONTROLÜNÜ İLK BAŞA ALDIK (EN ÖNEMLİ DEĞİŞİKLİK)
+                 
+                 // === KOD GÜNCELLEMESİ BAŞLANGICI ===
+                 // App.auth.init() fonksiyonunu, tüm diğer işlemlerden ÖNCE başlatıyoruz.
+                 // Bu, sayfa yenilendiğinde (F5) oturumun hemen kontrol edilmesini sağlar.
+                 this.auth.init(); 
+                 // === KOD GÜNCELLEMESİ SONU ===
 
                  const header = document.getElementById('header');
                  window.addEventListener('scroll', () => header.classList.toggle('header-scrolled', window.scrollY > 50));
@@ -621,7 +626,7 @@
                       html += `<p class="col-span-full text-center text-text-secondary" data-translate="noMembers"></p>`;
                        container.innerHTML = html;
                        this.language.apply();
-                     return;
+                      return;
                  }
 
                  const members = data.members;
@@ -640,12 +645,12 @@
                       const displayRole = member.role;
                       
                       return `
-                         <a href="https://truckersmp.com/user/${member.user_id}" target="_blank" class="card rounded-xl p-6 text-center flex flex-col group">
-                             <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(member.username)}&background=161B22&color=E6EDF3&bold=true&size=128" class="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-border-color">
-                             <h4 class="text-lg font-bold text-white truncate">${member.username}</h4>
-                             <p class="text-accent-secondary font-semibold">${displayRole}</p> 
-                             <span class="mt-auto pt-4 text-sm text-text-secondary group-hover:text-white transition-colors" data-translate="viewProfile"> <i class="fas fa-external-link-alt ml-1"></i></span>
-                         </a>
+                          <a href="https://truckersmp.com/user/${member.user_id}" target="_blank" class="card rounded-xl p-6 text-center flex flex-col group">
+                              <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(member.username)}&background=161B22&color=E6EDF3&bold=true&size=128" class="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-border-color">
+                              <h4 class="text-lg font-bold text-white truncate">${member.username}</h4>
+                              <p class="text-accent-secondary font-semibold">${displayRole}</p> 
+                              <span class="mt-auto pt-4 text-sm text-text-secondary group-hover:text-white transition-colors" data-translate="viewProfile"> <i class="fas fa-external-link-alt ml-1"></i></span>
+                          </a>
                      `
                  }).join('');
                  container.innerHTML = html;
@@ -672,8 +677,8 @@
 
                  if (newsListContainer) {
                      newsListContainer.innerHTML = fallbackHtmlNews + newsData.map(post => {
-                         const date = new Date(post.published_at);
-                         const formattedDate = date.toLocaleString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
+                          const date = new Date(post.published_at);
+                          const formattedDate = date.toLocaleString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
                          return `
                          <div class="card rounded-xl p-8 content-prose">
                              <h3 class="mt-0">${post.title}</h3>
@@ -695,8 +700,8 @@
                      </div>
                      <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
                          ${latestPosts.map(post => {
-                             const date = new Date(post.published_at);
-                             const formattedDate = date.toLocaleString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
+                              const date = new Date(post.published_at);
+                              const formattedDate = date.toLocaleString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
                               const summary = post.content.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...';
                              return `
                              <div class="card rounded-xl p-6">
@@ -746,18 +751,18 @@
                       const eventDataString = encodeURIComponent(JSON.stringify(event));
 
                       return `
-                         <div class="card rounded-xl p-6 flex flex-col md:flex-row items-center gap-4">
-                             <img src="${event.banner}" alt="${event.name}" class="w-full md:w-1/4 h-24 object-cover rounded-lg mb-4 md:mb-0" onerror="this.src='https://placehold.co/400x200/1e293b/94a3b8?text=No+Banner';">
-                             <div class="flex-grow text-center md:text-left">
-                                 <h3 class="text-lg font-bold text-white">${event.name}</h3>
-                                 <p class="text-accent-secondary text-sm">${formattedDate} (TSI)</p>
-                                 <p class="text-xs text-text-secondary mt-1">TMP ID: ${event.id}</p>
-                             </div>
-                             <button onclick="App.modals.open('manage_convoy', '${eventDataString}')" class="btn-primary w-full md:w-auto px-4 py-2 rounded-lg text-sm" data-translate="manageSlots">
-                                 Manage Slots
-                             </button>
-                         </div>
-                         `;
+                          <div class="card rounded-xl p-6 flex flex-col md:flex-row items-center gap-4">
+                              <img src="${event.banner}" alt="${event.name}" class="w-full md:w-1/4 h-24 object-cover rounded-lg mb-4 md:mb-0" onerror="this.src='https://placehold.co/400x200/1e293b/94a3b8?text=No+Banner';">
+                              <div class="flex-grow text-center md:text-left">
+                                  <h3 class="text-lg font-bold text-white">${event.name}</h3>
+                                  <p class="text-accent-secondary text-sm">${formattedDate} (TSI)</p>
+                                  <p class="text-xs text-text-secondary mt-1">TMP ID: ${event.id}</p>
+                              </div>
+                              <button onclick="App.modals.open('manage_convoy', '${eventDataString}')" class="btn-primary w-full md:w-auto px-4 py-2 rounded-lg text-sm" data-translate="manageSlots">
+                                  Manage Slots
+                              </button>
+                          </div>
+                          `;
                   }).join('');
                   container.innerHTML = html;
                   this.language.apply();
@@ -772,11 +777,11 @@
                          modalMaxWidth = 'max-w-4xl';
                          
                          content = `
-                            <div class="flex justify-between items-start mb-6">
-                                <h2 class="text-3xl font-bold text-white">Slot Selection</h2>
-                                <button onclick="App.modals.close('slot')" class="text-gray-400 text-3xl leading-none hover:text-white">&times;</button>
-                            </div>
-                            <p class="text-text-secondary">This feature is being upgraded. Please login as a VTC Leader to book a slot for your VTC.</p>
+                             <div class="flex justify-between items-start mb-6">
+                                 <h2 class="text-3xl font-bold text-white">Slot Selection</h2>
+                                 <button onclick="App.modals.close('slot')" class="text-gray-400 text-3xl leading-none hover:text-white">&times;</button>
+                             </div>
+                             <p class="text-text-secondary">This feature is being upgraded. Please login as a VTC Leader to book a slot for your VTC.</p>
                          `;
                      } 
                      
@@ -784,71 +789,71 @@
                          container = document.getElementById('auth-modal-container');
                          modalMaxWidth = 'max-w-md'; 
                          content = `
-                            <div class="flex justify-between items-start mb-6">
-                                <h2 class="text-3xl font-bold text-white">VTC Portal Access</h2>
-                                <button onclick="App.modals.close('auth')" class="text-gray-400 text-3xl leading-none hover:text-white">&times;</button>
-                            </div>
-                            
-                            <div id="auth-error" class="p-3 rounded-lg mb-4" style="display: none;"></div>
-                            
-                            <button onclick="App.auth.signInWithGoogle()" class="btn-google w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2">
-                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 48 48"><g><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></g></svg>
-                                Sign in with Google
-                            </button>
-                            
-                            <p class="text-sm text-text-secondary text-center mt-4">
-                                Use your Google account to log in. Admins will be granted roles manually.
-                            </p>
-                         `;
+                             <div class="flex justify-between items-start mb-6">
+                                 <h2 class="text-3xl font-bold text-white">VTC Portal Access</h2>
+                                 <button onclick="App.modals.close('auth')" class="text-gray-400 text-3xl leading-none hover:text-white">&times;</button>
+                             </div>
+                             
+                             <div id="auth-error" class="p-3 rounded-lg mb-4" style="display: none;"></div>
+                             
+                             <button onclick="App.auth.signInWithGoogle()" class="btn-google w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2">
+                                 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 48 48"><g><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></g></svg>
+                                 Sign in with Google
+                             </button>
+                             
+                             <p class="text-sm text-text-secondary text-center mt-4">
+                                 Use your Google account to log in. Admins will be granted roles manually.
+                             </p>
+                           `;
                      }
                      
                      else if (type === 'manage_convoy') {
-                        container = document.getElementById('modal-container'); 
-                        modalMaxWidth = 'max-w-4xl';
-                        
-                        const event = JSON.parse(decodeURIComponent(data));
-                        
-                        content = `
-                            <div class="flex justify-between items-start mb-6">
-                                <div>
-                                    <h2 class="text-3xl font-bold text-white">Manage Slots: ${event.name}</h2>
-                                    <p class="text-text-secondary">TMP ID: ${event.id}</p>
-                                </div>
-                                <button onclick="App.modals.close('slot')" class="text-gray-400 text-3xl leading-none hover:text-white">&times;</button>
-                            </div>
-                            
-                            <div id="admin-message" class="p-3 rounded-lg mb-4" style="display: none;"></div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="card p-6">
-                                    <h3 class="text-xl font-bold text-white mb-4">Slot Map Image Link</h3>
-                                    <p class="text-sm text-text-secondary mb-4">Paste an image link (e.g., hizliresim, imgbb). This map will be shown to VTC leaders.</p>
-                                    
-                                    <label for="slot-map-link" class="block text-sm font-medium text-text-secondary mb-1">Image URL</label>
-                                    <input type="url" id="slot-map-link" class="form-input" placeholder="https://i.hizliresim.com/...">
-                                    
-                                    <button onclick="App.admin.saveMapLink(${event.id})" class="btn-primary w-full py-2 rounded-lg font-bold mt-4">Save Link</button>
-                                </div>
-                                
-                                <div class="card p-6">
-                                    <h3 class="text-xl font-bold text-white mb-4">Manage Zones</h3>
-                                    <p class="text-sm text-text-secondary mb-4">Add parking zones and set their VTC capacity.</p>
-                                    <form class="flex gap-2" onsubmit="App.admin.addZone(event, ${event.id}); return false;">
-                                        <input type="text" id="zone-name" placeholder="Zone Name (e.g., Main Lot)" class="form-input w-2/3">
-                                        <input type="number" id="zone-capacity" placeholder="Cap." class="form-input w-1/3" min="1" value="10">
-                                        <button type="submit" class="btn-primary px-4 rounded-lg font-bold">Add</button>
-                                    </form>
-                                    
-                                    <div id="zone-list" class="mt-4 space-y-2">
-                                        <p class="text-text-secondary text-sm">Loading zones...</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <script>
-                                setTimeout(() => App.admin.loadConvoyConfig(${event.id}), 50);
-                            </script>
-                        `;
+                          container = document.getElementById('modal-container'); 
+                          modalMaxWidth = 'max-w-4xl';
+                         
+                          const event = JSON.parse(decodeURIComponent(data));
+                         
+                          content = `
+                             <div class="flex justify-between items-start mb-6">
+                                 <div>
+                                     <h2 class="text-3xl font-bold text-white">Manage Slots: ${event.name}</h2>
+                                     <p class="text-text-secondary">TMP ID: ${event.id}</p>
+                                 </div>
+                                 <button onclick="App.modals.close('slot')" class="text-gray-400 text-3xl leading-none hover:text-white">&times;</button>
+                             </div>
+                             
+                             <div id="admin-message" class="p-3 rounded-lg mb-4" style="display: none;"></div>
+                             
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 <div class="card p-6">
+                                     <h3 class="text-xl font-bold text-white mb-4">Slot Map Image Link</h3>
+                                     <p class="text-sm text-text-secondary mb-4">Paste an image link (e.g., hizliresim, imgbb). This map will be shown to VTC leaders.</p>
+                                     
+                                     <label for="slot-map-link" class="block text-sm font-medium text-text-secondary mb-1">Image URL</label>
+                                     <input type="url" id="slot-map-link" class="form-input" placeholder="https://i.hizliresim.com/...">
+                                     
+                                     <button onclick="App.admin.saveMapLink(${event.id})" class="btn-primary w-full py-2 rounded-lg font-bold mt-4">Save Link</button>
+                                 </div>
+                                 
+                                 <div class="card p-6">
+                                     <h3 class="text-xl font-bold text-white mb-4">Manage Zones</h3>
+                                     <p class="text-sm text-text-secondary mb-4">Add parking zones and set their VTC capacity.</p>
+                                     <form class="flex gap-2" onsubmit="App.admin.addZone(event, ${event.id}); return false;">
+                                         <input type="text" id="zone-name" placeholder="Zone Name (e.g., Main Lot)" class="form-input w-2/3">
+                                         <input type="number" id="zone-capacity" placeholder="Cap." class="form-input w-1/3" min="1" value="10">
+                                         <button type="submit" class="btn-primary px-4 rounded-lg font-bold">Add</button>
+                                     </form>
+                                     
+                                     <div id="zone-list" class="mt-4 space-y-2">
+                                         <p class="text-text-secondary text-sm">Loading zones...</p>
+                                     </div>
+                                 </div>
+                             </div>
+                             
+                             <script>
+                                 setTimeout(() => App.admin.loadConvoyConfig(${event.id}), 50);
+                             <\/script>
+                          `;
                      }
                      
                      
@@ -856,11 +861,11 @@
                          const modalIdType = (type === 'manage_convoy' || type === 'slot') ? 'slot' : 'auth';
                          
                          container.innerHTML = `
-                             <div id="modal-overlay-${modalIdType}" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[999] fade-in" onclick="App.modals.close('${modalIdType}')">
-                                 <div class="modal-content w-full ${modalMaxWidth} rounded-xl shadow-lg p-8 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-                                     ${content}
-                                 </div>
-                             </div>
+                              <div id="modal-overlay-${modalIdType}" class="modal-overlay fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[999] fade-in" onclick="App.modals.close('${modalIdType}')">
+                                  <div class="modal-content w-full ${modalMaxWidth} rounded-xl shadow-lg p-8 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+                                      ${content}
+                                  </div>
+                              </div>
                          `;
                          App.language.apply();
                      }
@@ -876,7 +881,7 @@
 
             slots: {
                  select(convoyId, slotId) {
-                     alert('This booking system is being upgraded! Please login as a VTC Leader.');
+                    alert('This booking system is being upgraded! Please login as a VTC Leader.');
                  }
             },
             
@@ -886,186 +891,195 @@
              },
             
             // ========================================================
-            // !!! YENİ ADMİN KONTROL OB JECT'İ !!!
+            // !!! YENİ ADMİN KONTROL OBJECT'İ !!!
             // (Slot haritası ve bölge ekleme/silme)
             // ========================================================
             admin: {
-                _displayMessage(text, type = 'error') {
-                    const msgEl = document.getElementById('admin-message');
-                    if (!msgEl) return;
+                 _displayMessage(text, type = 'error') {
+                     const msgEl = document.getElementById('admin-message');
+                     if (!msgEl) return;
                     
-                    msgEl.textContent = text;
-                    msgEl.style.display = 'block';
-                    if (type === 'success') {
-                        msgEl.classList.remove('text-red-400', 'bg-red-500/10');
-                        msgEl.classList.add('text-green-400', 'bg-green-500/10');
-                    } else {
-                        msgEl.classList.remove('text-green-400', 'bg-green-500/10');
-                        msgEl.classList.add('text-red-400', 'bg-red-500/10');
-                    }
-                },
+                     msgEl.textContent = text;
+                     msgEl.style.display = 'block';
+                     if (type === 'success') {
+                         msgEl.classList.remove('text-red-400', 'bg-red-500/10');
+                         msgEl.classList.add('text-green-400', 'bg-green-500/10');
+                     } else {
+                         msgEl.classList.remove('text-green-400', 'bg-green-500/10');
+                         msgEl.classList.add('text-red-400', 'bg-red-500/10');
+                     }
+                 },
 
-                async getOrCreateConfig(tmpConvoyId) {
-                    let { data, error } = await _supabase
-                        .from('convoy_configs')
-                        .select('id')
-                        .eq('tmp_convoy_id', tmpConvoyId)
-                        .single();
+                 async getOrCreateConfig(tmpConvoyId) {
+                     let { data, error } = await _supabase
+                         .from('convoy_configs')
+                         .select('id')
+                         .eq('tmp_convoy_id', tmpConvoyId)
+                         .single();
                     
-                    if (data) {
-                        return data.id; 
-                    }
+                     if (data) {
+                         return data.id; 
+                     }
                     
-                    console.log("No config found for this convoy, creating one...");
-                    let { data: newConfig, error: insertError } = await _supabase
-                        .from('convoy_configs')
-                        .insert({ tmp_convoy_id: tmpConvoyId })
-                        .select('id')
-                        .single();
-                        
-                    if (insertError) {
-                        console.error("Error creating convoy config:", insertError.message);
-                        this._displayMessage(`Error creating config: ${insertError.message}`);
-                        return null;
-                    }
+                     console.log("No config found for this convoy, creating one...");
+                     let { data: newConfig, error: insertError } = await _supabase
+                         .from('convoy_configs')
+                         .insert({ tmp_convoy_id: tmpConvoyId })
+                         .select('id')
+                         .single();
+                         
+                     if (insertError) {
+                         console.error("Error creating convoy config:", insertError.message);
+                         this._displayMessage(`Error creating config: ${insertError.message}`);
+                         return null;
+                     }
                     
-                    return newConfig.id;
-                },
+                     return newConfig.id;
+                 },
                 
-                async loadConvoyConfig(tmpConvoyId) {
-                    const list = document.getElementById('zone-list');
-                    const linkInput = document.getElementById('slot-map-link');
-                    if (!list || !linkInput) return;
+                 async loadConvoyConfig(tmpConvoyId) {
+                     const list = document.getElementById('zone-list');
+                     const linkInput = document.getElementById('slot-map-link');
+                     if (!list || !linkInput) return;
                     
-                    list.innerHTML = `<p class="text-text-secondary text-sm">Loading zones...</p>`;
+                     list.innerHTML = `<p class="text-text-secondary text-sm">Loading zones...</p>`;
                     
-                    let { data, error } = await _supabase
-                        .from('convoy_configs')
-                        .select('id, slot_map_image_url, convoy_zones (id, zone_name, capacity)')
-                        .eq('tmp_convoy_id', tmpConvoyId)
-                        .single();
-                        
-                    if (error || !data) {
-                        console.log("No config found for convoy ID:", tmpConvoyId);
-                        list.innerHTML = `<p class="text-text-secondary text-sm">No config found. Add zones to create one.</p>`;
-                        return;
-                    }
+                     let { data, error } = await _supabase
+                         .from('convoy_configs')
+                         .select('id, slot_map_image_url, convoy_zones (id, zone_name, capacity)')
+                         .eq('tmp_convoy_id', tmpConvoyId)
+                         .single();
+                         
+                     if (error || !data) {
+                         console.log("No config found for convoy ID:", tmpConvoyId);
+                         list.innerHTML = `<p class="text-text-secondary text-sm">No config found. Add zones to create one.</p>`;
+                         return;
+                     }
                     
-                    linkInput.value = data.slot_map_image_url || '';
+                     linkInput.value = data.slot_map_image_url || '';
                     
-                    if (!data.convoy_zones || data.convoy_zones.length === 0) {
-                        list.innerHTML = `<p class="text-text-secondary text-sm">No zones added yet.</p>`;
-                        return;
-                    }
+                     if (!data.convoy_zones || data.convoy_zones.length === 0) {
+                         list.innerHTML = `<p class="text-text-secondary text-sm">No zones added yet.</p>`;
+                         return;
+                     }
                     
-                    list.innerHTML = data.convoy_zones.map(zone => {
-                        return `
-                            <div class="flex justify-between items-center bg-bg-primary p-2 rounded">
-                                <span class="text-text-primary">${zone.zone_name} (Cap: ${zone.capacity})</span>
-                                <button onclick="App.admin.deleteZone(${zone.id}, ${tmpConvoyId})" class="text-red-400 hover:text-red-300">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        `;
-                    }).join('');
-                },
+                     list.innerHTML = data.convoy_zones.map(zone => {
+                         return `
+                             <div class="flex justify-between items-center bg-bg-primary p-2 rounded">
+                                 <span class="text-text-primary">${zone.zone_name} (Cap: ${zone.capacity})</span>
+                                 <button onclick="App.admin.deleteZone(${zone.id}, ${tmpConvoyId})" class="text-red-400 hover:text-red-300">
+                                     <i class="fas fa-trash"></i>
+                                 </button>
+                             </div>
+                         `;
+                     }).join('');
+                 },
                 
-                async saveMapLink(tmpConvoyId) {
-                    const link = document.getElementById('slot-map-link').value;
+                 async saveMapLink(tmpConvoyId) {
+                     const link = document.getElementById('slot-map-link').value;
                     
-                    const configId = await this.getOrCreateConfig(tmpConvoyId);
-                    if (!configId) return;
+                     const configId = await this.getOrCreateConfig(tmpConvoyId);
+                     if (!configId) return;
                     
-                    const { error } = await _supabase
-                        .from('convoy_configs')
-                        .update({ slot_map_image_url: link })
-                        .eq('id', configId);
-                        
-                    if (error) {
-                        this._displayMessage(`Error: ${error.message}`);
-                    } else {
-                        this._displayMessage('Map link saved!', 'success');
-                    }
-                },
-                
-                async addZone(event, tmpConvoyId) {
-                    event.preventDefault();
-                    const nameInput = document.getElementById('zone-name');
-                    const capacityInput = document.getElementById('zone-capacity');
-                    
-                    const zoneName = nameInput.value;
-                    const capacity = parseInt(capacityInput.value);
-                    
-                    if (!zoneName || !capacity || capacity < 1) {
-                        this._displayMessage('Please enter a valid zone name and capacity.');
-                        return;
-                    }
-                    
-                    const configId = await this.getOrCreateConfig(tmpConvoyId);
-                    if (!configId) return;
-
-                    const { error } = await _supabase
-                        .from('convoy_zones')
-                        .insert({
-                            config_id: configId,
-                            zone_name: zoneName,
-                            capacity: capacity
-                        });
-                        
-                    if (error) {
+                     const { error } = await _supabase
+                         .from('convoy_configs')
+                         .update({ slot_map_image_url: link })
+                         .eq('id', configId);
+                         
+                     if (error) {
                          this._displayMessage(`Error: ${error.message}`);
-                    } else {
-                        this._displayMessage('Zone added successfully!', 'success');
-                        nameInput.value = '';
-                        capacityInput.value = '10';
-                        this.loadConvoyConfig(tmpConvoyId);
-                    }
-                },
+                     } else {
+                         this._displayMessage('Map link saved!', 'success');
+                     }
+                 },
                 
-                async deleteZone(zoneId, tmpConvoyId) {
-                    if (!confirm('Are you sure you want to delete this zone? This will remove all VTCs booked in it.')) {
-                        return;
-                    }
+                 async addZone(event, tmpConvoyId) {
+                     event.preventDefault();
+                     const nameInput = document.getElementById('zone-name');
+                     const capacityInput = document.getElementById('zone-capacity');
                     
-                    const { error } = await _supabase
-                        .from('convoy_zones')
-                        .delete()
-                        .eq('id', zoneId);
-                        
-                    if (error) {
-                        alert(`Error deleting zone: ${error.message}`);
-                    } else {
-                        this.loadConvoyConfig(tmpConvoyId); // Listeyi yenile
-                    }
-                }
+                     const zoneName = nameInput.value;
+                     const capacity = parseInt(capacityInput.value);
+                    
+                     if (!zoneName || !capacity || capacity < 1) {
+                         this._displayMessage('Please enter a valid zone name and capacity.');
+                         return;
+                     }
+                    
+                     const configId = await this.getOrCreateConfig(tmpConvoyId);
+                     if (!configId) return;
+
+                     const { error } = await _supabase
+                         .from('convoy_zones')
+                         .insert({
+                             config_id: configId,
+                             zone_name: zoneName,
+                             capacity: capacity
+                         });
+                         
+                     if (error) {
+                          this._displayMessage(`Error: ${error.message}`);
+                     } else {
+                         this._displayMessage('Zone added successfully!', 'success');
+                         nameInput.value = '';
+                         capacityInput.value = '10';
+                         this.loadConvoyConfig(tmpConvoyId);
+                     }
+                 },
+                
+                 async deleteZone(zoneId, tmpConvoyId) {
+                     // Not: confirm() ve alert() tarayıcıda düzgün çalışmayabilir.
+                     // Gerçek bir projede burası için özel bir modal yapmalısın.
+                     if (!confirm('Are you sure you want to delete this zone? This will remove all VTCs booked in it.')) {
+                         return;
+                     }
+                    
+                     const { error } = await _supabase
+                         .from('convoy_zones')
+                         .delete()
+                         .eq('id', zoneId);
+                         
+                     if (error) {
+                         alert(`Error deleting zone: ${error.message}`);
+                     } else {
+                         this.loadConvoyConfig(tmpConvoyId); // Listeyi yenile
+                     }
+                 }
             },
             
             // ========================================================
-            // !!! TAMAMEN GÜNCELLENMİŞ AUTH BÖLÜMÜ !!!
-            // (SQL Trigger'sız, Sadece Google ile)
+            // !!! GÜNCELLENMİŞ AUTH BÖLÜMÜ !!!
+            // (F5 (Hesaptan Atma) sorununu çözmek için
+            // onAuthStateChange'in sıralaması iyileştirildi.)
             // ========================================================
             auth: {
                 init() {
                     _supabase.auth.onAuthStateChange(async (event, session) => {
                         console.log('Auth State Change:', event, session);
-                        
-                        // "HESAPTAN ATMA" SORUNU ÇÖZÜMÜ:
-                        // 'INITIAL_SESSION' (sayfa yenileme) veya 'SIGNED_IN' (giriş yapma) durumunda
-                        // kullanıcı profilini ÇEKMEYİ bekle.
-                        if (session && session.user && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+
+                        // 1. Adım: Kullanıcı Durumunu Güncelle
+                        if (event === 'SIGNED_OUT') {
+                            // Çıkış yapıldı
+                            App.state.currentUser = null;
+                            App.state.isAdmin = false;
+                        } else if (session && session.user) {
+                            // Sayfa yenilendi (INITIAL_SESSION) VEYA giriş yapıldı (SIGNED_IN)
+                            // Profil bilgisini çekmeyi BEKLE (await)
                             await this.getProfile(session.user);
-                        } else if (event === 'SIGNED_OUT') {
+                        } else if (event === 'INITIAL_SESSION' && !session) {
+                            // Sayfa yüklendi ve oturum yok (en baştaki durum)
                             App.state.currentUser = null;
                             App.state.isAdmin = false;
                         }
-                        
-                        // Bütün API verilerini, GİRİŞ İŞLEMİ BİTTİKTEN SONRA çek.
+
+                        // 2. Adım: Arayüzü ve Verileri Güncelle
+                        // Bu kodlar, YALNIZCA 'await this.getProfile' bittikten
+                        // VEYA 'SIGNED_OUT' işlemi bittikten sonra çalışır.
+                        // Bu, admin yetkisi olmadan admin panelinin yüklenmesini engeller.
                         App.fetchAndRenderAllData();
-                        
-                        // Arayüzü güncelle
                         this.updateUI();
 
-                        // GOOGLE YÖNLENDİRME DÜZELTMESİ
+                        // 3. Adım: Giriş Yaptıktan Sonra Modalı Kapat
                         if (event === 'SIGNED_IN') {
                             App.modals.close('auth');
                             if (window.location.hash.includes('access_token')) {
@@ -1077,7 +1091,10 @@
                 
                 async getProfile(user) {
                     try {
-                        // RLS KAPALI olduğu için bu sorgu %100 çalışacaktır.
+                        // NOT: BU SORGUNUN ÇALIŞMASI İÇİN 'profiles' TABLOSUNDA
+                        // RLS'in KAPALI OLMASI VEYA "giriş yapmış kullanıcılar
+                        // 'profiles' tablosunu okuyabilir" DİYE BİR KURAL (POLICY)
+                        // EKLENMESİ GEREKİR.
                         let { data: profile, error } = await _supabase
                             .from('profiles')
                             .select('id, username, vtc_name, role') 
@@ -1111,10 +1128,11 @@
                             // Profil bulundu, state'i ayarla
                             App.state.currentUser = { ...user, ...profile };
                             App.state.isAdmin = (profile.role === 'admin');
-                        } else {
-                            // Başka bir hata
-                            console.error('Error fetching profile:', error.message);
+                        } else if (error) {
+                            // Başka bir hata (Muhtemelen RLS Hatası)
+                            console.error('Error fetching profile (RLS aktif mi?):', error.message);
                             App.state.currentUser = user; 
+                            App.state.isAdmin = false; // Profili okuyamadık, admin olamaz.
                         }
                     } catch (e) {
                         console.error("Error in getProfile:", e);
@@ -1156,7 +1174,7 @@
                         // State'i anında temizle ve UI'ı güncelle
                         App.state.currentUser = null;
                         App.state.isAdmin = false;
-                        this.updateUI();
+                        this.updateUI(); // Bu, onAuthStateChange'i beklemeden UI'ı hemen temizler
                         App.navigate('anasayfa', document.querySelector('a[href="#anasayfa"]'));
                     }
                 },
@@ -1312,11 +1330,11 @@
                              }
                         }
                     });
-                     
-                     const slotGrid = document.getElementById('slot-grid');
-                     if(slotGrid){
-                         //... (eski slot render kodu şimdilik kalabilir, bir zararı yok)
-                     }
+                    
+                    const slotGrid = document.getElementById('slot-grid');
+                    if(slotGrid){
+                        //... (eski slot render kodu şimdilik kalabilir, bir zararı yok)
+                    }
                 },
                  translate(key, params = {}) {
                      let text = this.translations[key] ? this.translations[key] : key;
