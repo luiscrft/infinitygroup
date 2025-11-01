@@ -432,7 +432,7 @@
                 try {
                     const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=`;
                     const response = await fetch(proxyUrl + url, {
-                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V22' } // Versiyon güncellendi
+                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V22' } 
                     });
                     if (!response.ok) throw new Error(`API request failed: ${response.status}`);
                     const data = await response.json();
@@ -481,7 +481,7 @@
                     }
                     const allEvents = Array.from(uniqueEventsMap.values());
                     
-                    this.state.liveConvoys = allEvents; // Canlı konvoyları state'e kaydet
+                    this.state.liveConvoys = allEvents;
                     const futureEvents = allEvents.filter(event => event && event.start_at && new Date(event.start_at) > new Date());
                     stats.convoys = futureEvents.length;
 
@@ -923,20 +923,25 @@
             // ========================================================
             auth: {
                 init() {
+                    // Sayfa yüklendiğinde ve her giriş/çıkışta durumu dinle
                     _supabase.auth.onAuthStateChange(async (event, session) => {
                         console.log('Auth State Change:', event);
                         if (session && session.user && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+                            // Kullanıcı giriş yapmış veya oturumu devam ediyor, profilini çek
                             await this.getProfile(session.user);
                         } else if (event === 'SIGNED_OUT') {
+                            // Kullanıcı çıkış yapmış
                             App.state.currentUser = null;
                             App.state.isAdmin = false;
                         }
+                        // Arayüzü her durumda güncelle
                         this.updateUI();
                     });
                 },
                 
                 async getProfile(user) {
                     try {
+                        // RLS KAPALI olduğu için bu sorgu artık %100 çalışacaktır.
                         let { data: profile, error } = await _supabase
                             .from('profiles')
                             .select('username, vtc_name, role')
@@ -951,8 +956,10 @@
                             App.state.isAdmin = (profile.role === 'admin');
                             console.log('Current User Profile:', App.state.currentUser);
                         } else {
+                            // Bu durum, trigger'ın henüz çalışmadığı bir "race condition" olabilir.
+                            // Kullanıcıyı ayarla, ancak profil bilgisi yok.
                             App.state.currentUser = user;
-                            console.warn("User logged in, but profile data is not ready yet.");
+                            console.warn("User logged in, but profile data is not ready yet (race condition).");
                         }
                     } catch (e) {
                         console.error("Error in getProfile:", e);
@@ -975,7 +982,6 @@
                     const { data: authData, error: authError } = await _supabase.auth.signUp({
                         email: email,
                         password: password
-                        // Not: options.data kaldırıldı
                     });
 
                     if (authError) {
@@ -993,6 +999,7 @@
                     console.log("User created in Auth, now creating profile...");
 
                     // 2. ADIM: MANUEL OLARAK 'profiles' tablosuna ekle
+                    // (SQL Trigger'ını sildik, artık bu kod gerekli)
                     const { error: profileError } = await _supabase
                         .from('profiles')
                         .insert({
