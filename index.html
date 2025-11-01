@@ -432,7 +432,7 @@
                 try {
                     const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=`;
                     const response = await fetch(proxyUrl + url, {
-                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V21' } 
+                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V22' } // Versiyon güncellendi
                     });
                     if (!response.ok) throw new Error(`API request failed: ${response.status}`);
                     const data = await response.json();
@@ -481,7 +481,7 @@
                     }
                     const allEvents = Array.from(uniqueEventsMap.values());
                     
-                    this.state.liveConvoys = allEvents;
+                    this.state.liveConvoys = allEvents; // Canlı konvoyları state'e kaydet
                     const futureEvents = allEvents.filter(event => event && event.start_at && new Date(event.start_at) > new Date());
                     stats.convoys = futureEvents.length;
 
@@ -908,7 +908,6 @@
             },
 
             slots: {
-                 // ESKİ SİSTEM (YENİSİYLE DEĞİŞTİ)
                  select(convoyId, slotId) {
                      alert('This booking system is being upgraded! Please login as a VTC Leader.');
                  }
@@ -924,25 +923,20 @@
             // ========================================================
             auth: {
                 init() {
-                    // Sayfa yüklendiğinde ve her giriş/çıkışta durumu dinle
                     _supabase.auth.onAuthStateChange(async (event, session) => {
                         console.log('Auth State Change:', event);
                         if (session && session.user && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
-                            // Kullanıcı giriş yapmış veya oturumu devam ediyor, profilini çek
                             await this.getProfile(session.user);
                         } else if (event === 'SIGNED_OUT') {
-                            // Kullanıcı çıkış yapmış
                             App.state.currentUser = null;
                             App.state.isAdmin = false;
                         }
-                        // Arayüzü her durumda güncelle
                         this.updateUI();
                     });
                 },
                 
                 async getProfile(user) {
                     try {
-                        // RLS KAPALI olduğu için bu sorgu artık %100 çalışacaktır.
                         let { data: profile, error } = await _supabase
                             .from('profiles')
                             .select('username, vtc_name, role')
@@ -957,10 +951,8 @@
                             App.state.isAdmin = (profile.role === 'admin');
                             console.log('Current User Profile:', App.state.currentUser);
                         } else {
-                            // Bu durum, trigger'ın henüz çalışmadığı bir "race condition" olabilir.
-                            // Kullanıcıyı ayarla, ancak profil bilgisi yok.
                             App.state.currentUser = user;
-                            console.warn("User logged in, but profile data is not ready yet (race condition).");
+                            console.warn("User logged in, but profile data is not ready yet.");
                         }
                     } catch (e) {
                         console.error("Error in getProfile:", e);
@@ -968,7 +960,7 @@
                 },
                 
                 // ========================================================
-                // !!! GÜNCELLENMİŞ KAYIT (SIGN UP) FONKSİYONU !!!
+                // !!! YENİ KAYIT (SIGN UP) FONKSİYONU (SQL Trigger YOK) !!!
                 // ========================================================
                 async signUp(event) {
                     event.preventDefault();
@@ -979,32 +971,52 @@
                     const errorEl = document.getElementById('auth-error');
                     errorEl.style.display = 'none';
 
-                    // Bilgiyi `options.data` ile yolla, SQL trigger'ı gerisini halledecek
-                    const { data, error } = await _supabase.auth.signUp({
+                    // 1. ADIM: Kullanıcıyı Auth'a kaydet
+                    const { data: authData, error: authError } = await _supabase.auth.signUp({
                         email: email,
-                        password: password,
-                        options: {
-                            data: {
-                                username: username,
-                                vtc_name: vtc_name
-                            }
-                        }
+                        password: password
+                        // Not: options.data kaldırıldı
                     });
 
-                    if (error) {
-                        errorEl.textContent = `Sign Up Error: ${error.message}`;
+                    if (authError) {
+                        errorEl.textContent = `Sign Up Error: ${authError.message}`;
                         errorEl.style.display = 'block';
                         return;
                     }
                     
-                    // KAYIT BAŞARILI, ŞİMDİ OTOMATİK GİRİŞ YAP
+                    if (!authData.user) {
+                        errorEl.textContent = "Sign up successful, but user data not returned. Please try logging in.";
+                        errorEl.style.display = 'block';
+                        return;
+                    }
+                    
+                    console.log("User created in Auth, now creating profile...");
+
+                    // 2. ADIM: MANUEL OLARAK 'profiles' tablosuna ekle
+                    const { error: profileError } = await _supabase
+                        .from('profiles')
+                        .insert({
+                            id: authData.user.id, // Auth ID'sini kopyala
+                            username: username,
+                            vtc_name: vtc_name,
+                            role: 'vtc_leader' // Varsayılan rol
+                        });
+                    
+                    if (profileError) {
+                        // Bu kritik bir hata. Kullanıcı oluştu ama profili oluşmadı.
+                        errorEl.textContent = `Sign Up Error (Profile): ${profileError.message}. Please contact an admin.`;
+                        errorEl.style.display = 'block';
+                        return;
+                    }
+
+                    // 3. ADIM: Başarılı, şimdi otomatik giriş yap
+                    console.log("Profile created. Logging in...");
                     errorEl.textContent = "Sign up successful! Logging you in...";
                     errorEl.style.display = "block";
                     errorEl.classList.remove('text-red-400', 'bg-red-500/10');
                     errorEl.classList.add('text-green-400', 'bg-green-500/10');
                     
                     // Otomatik giriş yapmak için signIn fonksiyonunu çağır
-                    // (Not: E-posta onayı açıksa bu hata verebilir, ama sen kapattın)
                     await this.signIn(null, email, password);
                 },
                 
@@ -1067,6 +1079,7 @@
                     const authButtonsMobile = document.getElementById('auth-buttons-mobile');
                     const welcomeMsgMobile = document.getElementById('welcome-message-mobile');
                     
+                    // Admin linklerini ve panelini sadece admin ise göster/render et
                     document.getElementById('admin-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-mobile-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-footer-link').style.display = isAdmin ? 'block' : 'none';
