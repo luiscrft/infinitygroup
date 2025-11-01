@@ -785,6 +785,9 @@
                          `;
                      } 
                      
+                     // ========================================================
+                     // !!! GÜNCELLENMİŞ AUTH MODALI (SADECE GOOGLE) !!!
+                     // ========================================================
                      else if (type === 'auth') {
                          container = document.getElementById('auth-modal-container');
                          modalMaxWidth = 'max-w-md'; 
@@ -807,6 +810,9 @@
                          `;
                      }
                      
+                     // ========================================================
+                     // !!! GÜNCELLENMİŞ ADMIN MODALI (LİNK İLE EKLEME) !!!
+                     // ========================================================
                      else if (type === 'manage_convoy') {
                         container = document.getElementById('modal-container'); 
                         modalMaxWidth = 'max-w-4xl';
@@ -895,6 +901,21 @@
             // (Slot haritası ve bölge ekleme/silme)
             // ========================================================
             admin: {
+                _displayMessage(text, type = 'error') {
+                    const msgEl = document.getElementById('admin-message');
+                    if (!msgEl) return;
+                    
+                    msgEl.textContent = text;
+                    msgEl.style.display = 'block';
+                    if (type === 'success') {
+                        msgEl.classList.remove('text-red-400', 'bg-red-500/10');
+                        msgEl.classList.add('text-green-400', 'bg-green-500/10');
+                    } else {
+                        msgEl.classList.remove('text-green-400', 'bg-green-500/10');
+                        msgEl.classList.add('text-red-400', 'bg-red-500/10');
+                    }
+                },
+
                 // Helper: Bir konvoy için veritabanında ayar (config) var mı diye bakar, yoksa oluşturur.
                 async getOrCreateConfig(tmpConvoyId) {
                     // 1. Mevcut config'i ara
@@ -909,6 +930,7 @@
                     }
                     
                     // 2. Bulunamadı, yeni bir config oluştur
+                    console.log("No config found for this convoy, creating one...");
                     let { data: newConfig, error: insertError } = await _supabase
                         .from('convoy_configs')
                         .insert({ tmp_convoy_id: tmpConvoyId })
@@ -917,6 +939,7 @@
                         
                     if (insertError) {
                         console.error("Error creating convoy config:", insertError.message);
+                        this._displayMessage(`Error creating config: ${insertError.message}`);
                         return null;
                     }
                     
@@ -938,14 +961,13 @@
                         .single();
                         
                     if (error || !data) {
+                        console.log("No config found for convoy ID:", tmpConvoyId);
                         list.innerHTML = `<p class="text-text-secondary text-sm">No config found. Add zones to create one.</p>`;
                         return;
                     }
                     
-                    // Mevcut harita linkini input'a yaz
                     linkInput.value = data.slot_map_image_url || '';
                     
-                    // Mevcut bölgeleri (zones) listele
                     if (!data.convoy_zones || data.convoy_zones.length === 0) {
                         list.innerHTML = `<p class="text-text-secondary text-sm">No zones added yet.</p>`;
                         return;
@@ -966,14 +988,9 @@
                 // Resim linkini kaydeder
                 async saveMapLink(tmpConvoyId) {
                     const link = document.getElementById('slot-map-link').value;
-                    const msgEl = document.getElementById('admin-message');
                     
                     const configId = await this.getOrCreateConfig(tmpConvoyId);
-                    if (!configId) {
-                        msgEl.textContent = 'Error: Could not get convoy config.';
-                        msgEl.style.display = 'block';
-                        return;
-                    }
+                    if (!configId) return;
                     
                     const { error } = await _supabase
                         .from('convoy_configs')
@@ -981,20 +998,15 @@
                         .eq('id', configId);
                         
                     if (error) {
-                        msgEl.textContent = `Error: ${error.message}`;
-                        msgEl.style.display = 'block';
+                        this._displayMessage(`Error: ${error.message}`);
                     } else {
-                        msgEl.textContent = 'Map link saved!';
-                        msgEl.style.display = 'block';
-                        msgEl.classList.remove('text-red-400', 'bg-red-500/10');
-                        msgEl.classList.add('text-green-400', 'bg-green-500/10');
+                        this._displayMessage('Map link saved!', 'success');
                     }
                 },
                 
                 // Yeni bölge (zone) ekler
                 async addZone(event, tmpConvoyId) {
                     event.preventDefault();
-                    const msgEl = document.getElementById('admin-message');
                     const nameInput = document.getElementById('zone-name');
                     const capacityInput = document.getElementById('zone-capacity');
                     
@@ -1002,17 +1014,12 @@
                     const capacity = parseInt(capacityInput.value);
                     
                     if (!zoneName || !capacity || capacity < 1) {
-                        msgEl.textContent = 'Please enter a valid zone name and capacity.';
-                        msgEl.style.display = 'block';
+                        this._displayMessage('Please enter a valid zone name and capacity.');
                         return;
                     }
                     
                     const configId = await this.getOrCreateConfig(tmpConvoyId);
-                    if (!configId) {
-                        msgEl.textContent = 'Error: Could not get convoy config.';
-                        msgEl.style.display = 'block';
-                        return;
-                    }
+                    if (!configId) return;
 
                     const { error } = await _supabase
                         .from('convoy_zones')
@@ -1023,15 +1030,9 @@
                         });
                         
                     if (error) {
-                         msgEl.textContent = `Error: ${error.message}`;
-                         msgEl.style.display = 'block';
+                         this._displayMessage(`Error: ${error.message}`);
                     } else {
-                        msgEl.textContent = 'Zone added successfully!';
-                        msgEl.style.display = 'block';
-                        msgEl.classList.remove('text-red-400', 'bg-red-500/10');
-                        msgEl.classList.add('text-green-400', 'bg-green-500/10');
-                        
-                        // Formu temizle ve listeyi yenile
+                        this._displayMessage('Zone added successfully!', 'success');
                         nameInput.value = '';
                         capacityInput.value = '10';
                         this.loadConvoyConfig(tmpConvoyId);
@@ -1059,6 +1060,7 @@
             
             // ========================================================
             // !!! TAMAMEN GÜNCELLENMİŞ AUTH BÖLÜMÜ !!!
+            // (Artık SQL Trigger'sız, Sadece Google ile)
             // ========================================================
             auth: {
                 init() {
@@ -1115,7 +1117,7 @@
                                 
                             if(insertError) {
                                 console.error("Error creating profile:", insertError.message);
-                                App.state.currentUser = user; 
+                                App.state.currentUser = user; // Profilsiz devam et
                             } else {
                                 App.state.currentUser = { ...user, ...newProfile };
                                 App.state.isAdmin = (newProfile.role === 'admin');
@@ -1200,6 +1202,8 @@
                     }
 
                     if (user) {
+                        // Giriş yapılmış
+                        // Profil 'username'i varsa onu, yoksa e-postayı göster
                         const displayName = user.username || (user.email ? user.email.split('@')[0] : 'User');
                         welcomeMsg.textContent = `Welcome, ${displayName}`;
                         userInfo.style.display = 'flex';
@@ -1210,6 +1214,7 @@
                         authButtonsMobile.style.display = 'none';
                         
                     } else {
+                        // Giriş yapılmamış
                         userInfo.style.display = 'none';
                         authButtons.style.display = 'block';
                         
