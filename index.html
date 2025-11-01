@@ -948,13 +948,23 @@
                     _supabase.auth.onAuthStateChange(async (event, session) => {
                         console.log('Auth State Change:', event);
                         if (session && session.user && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
-                            // Kullanıcı giriş yapmış veya oturumu devam ediyor, profilini çek veya oluştur
+                            // Kullanıcı giriş yapmış veya oturumu devam ediyor, profilini çek
                             await this.getProfile(session.user);
                         } else if (event === 'SIGNED_OUT') {
                             App.state.currentUser = null;
                             App.state.isAdmin = false;
                         }
                         this.updateUI();
+
+                        // !!! GOOGLE YÖNLENDİRME DÜZELTMESİ !!!
+                        if (event === 'SIGNED_IN') {
+                            App.modals.close('auth');
+                            if (window.location.hash.includes('#access_token')) {
+                                // URL'den #access_token'ı temizle ve anasayfaya git
+                                App.navigate('anasayfa', document.querySelector('a[href="#anasayfa"]'));
+                                // history.pushState("", document.title, window.location.pathname + window.location.search);
+                            }
+                        }
                     });
                 },
                 
@@ -968,24 +978,24 @@
                             
                         if (error && error.code === 'PGRST116') {
                             // Hata Kodu PGRST116 = "0 satır döndü" (Yani profil yok)
+                            // Bu, Google ile ilk kez giriş yapan biri demektir.
                             console.warn("No profile found for user, creating one...");
                             
-                            // Google ile giriş yapanlar için varsayılan profil oluştur
                             const { data: newProfile, error: insertError } = await _supabase
                                 .from('profiles')
                                 .insert({
                                     id: user.id,
-                                    // Google adı varsa kullan, yoksa e-postanın başını kullan
                                     username: user.user_metadata?.full_name || user.email.split('@')[0],
                                     vtc_name: 'N/A' // Google kullanıcısının VTC'si bilinmiyor
                                 })
-                                .select()
+                                .select('username, vtc_name, role') // Eklenen veriyi geri çek
                                 .single();
                                 
                             if(insertError) {
                                 console.error("Error creating profile:", insertError.message);
                                 App.state.currentUser = user; // Profilsiz devam et
                             } else {
+                                // Yeni oluşturulan profili state'e ekle
                                 App.state.currentUser = { ...user, ...newProfile };
                                 App.state.isAdmin = (newProfile.role === 'admin');
                             }
@@ -1028,12 +1038,16 @@
 
                     if (authError) {
                         errorEl.textContent = `Sign Up Error: ${authError.message}`;
+                        errorEl.classList.remove('text-green-400', 'bg-green-500/10');
+                        errorEl.classList.add('text-red-400', 'bg-red-500/10');
                         errorEl.style.display = 'block';
                         return;
                     }
                     
                     if (!authData.user) {
                         errorEl.textContent = "Sign up successful, but user data not returned. Please try logging in.";
+                        errorEl.classList.remove('text-green-400', 'bg-green-500/10');
+                        errorEl.classList.add('text-red-400', 'bg-red-500/10');
                         errorEl.style.display = 'block';
                         return;
                     }
@@ -1052,6 +1066,8 @@
                     
                     if (profileError) {
                         errorEl.textContent = `Sign Up Error (Profile): ${profileError.message}. Please contact an admin.`;
+                        errorEl.classList.remove('text-green-400', 'bg-green-500/10');
+                        errorEl.classList.add('text-red-400', 'bg-red-500/10');
                         errorEl.style.display = 'block';
                         return;
                     }
@@ -1059,9 +1075,9 @@
                     // 3. ADIM: Başarılı, şimdi otomatik giriş yap
                     console.log("Profile created. Logging in...");
                     errorEl.textContent = "Sign up successful! Logging you in...";
-                    errorEl.style.display = "block";
                     errorEl.classList.remove('text-red-400', 'bg-red-500/10');
                     errorEl.classList.add('text-green-400', 'bg-green-500/10');
+                    errorEl.style.display = "block";
                     
                     await this.signIn(null, email, password);
                 },
@@ -1086,6 +1102,8 @@
                     if (error) {
                         // Hata varsa göster
                         errorEl.textContent = `Login Error: ${error.message}`;
+                        errorEl.classList.remove('text-green-400', 'bg-green-500/10');
+                        errorEl.classList.add('text-red-400', 'bg-red-500/10');
                         errorEl.style.display = 'block';
                     } else if (data.user) {
                         // BAŞARILI!
@@ -1100,9 +1118,6 @@
                     }
                 },
                 
-                // ========================================================
-                // !!! YENİ FONKSİYON: Google ile Giriş !!!
-                // ========================================================
                 async signInWithGoogle() {
                     const { error } = await _supabase.auth.signInWithOAuth({
                         provider: 'google'
@@ -1110,6 +1125,8 @@
                     if (error) {
                         const errorEl = document.getElementById('auth-error');
                         errorEl.textContent = `Google Login Error: ${error.message}`;
+                        errorEl.classList.remove('text-green-400', 'bg-green-500/10');
+                        errorEl.classList.add('text-red-400', 'bg-red-500/10');
                         errorEl.style.display = 'block';
                     }
                 },
@@ -1139,6 +1156,7 @@
                     const authButtonsMobile = document.getElementById('auth-buttons-mobile');
                     const welcomeMsgMobile = document.getElementById('welcome-message-mobile');
                     
+                    // Admin linklerini ve panelini sadece admin ise göster/render et
                     document.getElementById('admin-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-mobile-nav-link').style.display = isAdmin ? 'block' : 'none';
                     document.getElementById('admin-footer-link').style.display = isAdmin ? 'block' : 'none';
