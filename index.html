@@ -380,8 +380,8 @@
         // SUPABASE BAĞLANTISI
         // ========================================================
         
-        const SUPABASE_URL = 'https://dtewqstchueaehpogqvr.supabase.co'; // Örn: https://xxxx.supabase.co
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZXdxc3RjaHVlYWVocG9ncXZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5MzU0MzcsImV4cCI6MjA3NzUxMTQzN30.9YnfQ8jHafKlWu5C307MqDW2ZpR_xOIEZTg3NyRVGD0'; // Örn: eyJh...
+        const SUPABASE_URL = 'SENİN_URLN_BURAYA'; // Örn: https://xxxx.supabase.co
+        const SUPABASE_KEY = 'SENİN_ANON_KEYİN_BURAYA'; // Örn: eyJh...
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
         
@@ -432,7 +432,7 @@
                 try {
                     const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=`;
                     const response = await fetch(proxyUrl + url, {
-                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V21' } // Versiyon güncellendi
+                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V21' } 
                     });
                     if (!response.ok) throw new Error(`API request failed: ${response.status}`);
                     const data = await response.json();
@@ -481,7 +481,7 @@
                     }
                     const allEvents = Array.from(uniqueEventsMap.values());
                     
-                    this.state.liveConvoys = allEvents; // Canlı konvoyları state'e kaydet
+                    this.state.liveConvoys = allEvents;
                     const futureEvents = allEvents.filter(event => event && event.start_at && new Date(event.start_at) > new Date());
                     stats.convoys = futureEvents.length;
 
@@ -957,6 +957,8 @@
                             App.state.isAdmin = (profile.role === 'admin');
                             console.log('Current User Profile:', App.state.currentUser);
                         } else {
+                            // Bu durum, trigger'ın henüz çalışmadığı bir "race condition" olabilir.
+                            // Kullanıcıyı ayarla, ancak profil bilgisi yok.
                             App.state.currentUser = user;
                             console.warn("User logged in, but profile data is not ready yet (race condition).");
                         }
@@ -1002,7 +1004,8 @@
                     errorEl.classList.add('text-green-400', 'bg-green-500/10');
                     
                     // Otomatik giriş yapmak için signIn fonksiyonunu çağır
-                    await this.signIn(event, email, password);
+                    // (Not: E-posta onayı açıksa bu hata verebilir, ama sen kapattın)
+                    await this.signIn(null, email, password);
                 },
                 
                 // ========================================================
