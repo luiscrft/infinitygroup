@@ -421,7 +421,7 @@
                 try {
                     const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=`;
                     const response = await fetch(proxyUrl + url, {
-                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V23' } // Versiyon güncellendi
+                        headers: { 'User-Agent': 'twReasy/InfinityGroup-Website-V23' }
                     });
                     if (!response.ok) throw new Error(`API request failed: ${response.status}`);
                     const data = await response.json();
@@ -497,8 +497,9 @@
 
              init() {
                  this.language.apply(); 
-                 this.fetchAndRenderAllData();
-                 setInterval(() => this.fetchAndRenderAllData(), 300000);
+                 
+                 // ÖNEMLİ: API verilerini, GİRİŞ KONTROLÜ bittikten sonra çağırıyoruz
+                 // this.fetchAndRenderAllData(); // Buradan kaldırıldı
                  
                  this.auth.init(); // Sayfa yüklendiğinde giriş yapan kullanıcı var mı diye kontrol et
 
@@ -784,12 +785,9 @@
                          `;
                      } 
                      
-                     // ========================================================
-                     // !!! GÜNCELLENMİŞ AUTH MODALI (SADECE GOOGLE) !!!
-                     // ========================================================
                      else if (type === 'auth') {
                          container = document.getElementById('auth-modal-container');
-                         modalMaxWidth = 'max-w-md'; // Daha küçük
+                         modalMaxWidth = 'max-w-md'; 
                          content = `
                             <div class="flex justify-between items-start mb-6">
                                 <h2 class="text-3xl font-bold text-white">VTC Portal Access</h2>
@@ -804,14 +802,11 @@
                             </button>
                             
                             <p class="text-sm text-text-secondary text-center mt-4">
-                                Use your Google account to log in or create an account. VTC Leaders will be asked for their VTC name upon first booking.
+                                Use your Google account to log in. Admins will be granted roles manually.
                             </p>
                          `;
                      }
                      
-                     // ========================================================
-                     // !!! GÜNCELLENMİŞ ADMIN MODALI (LİNK İLE EKLEME) !!!
-                     // ========================================================
                      else if (type === 'manage_convoy') {
                         container = document.getElementById('modal-container'); 
                         modalMaxWidth = 'max-w-4xl';
@@ -827,6 +822,8 @@
                                 <button onclick="App.modals.close('slot')" class="text-gray-400 text-3xl leading-none hover:text-white">&times;</button>
                             </div>
                             
+                            <div id="admin-message" class="p-3 rounded-lg mb-4" style="display: none;"></div>
+                            
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="card p-6">
                                     <h3 class="text-xl font-bold text-white mb-4">Slot Map Image Link</h3>
@@ -835,23 +832,27 @@
                                     <label for="slot-map-link" class="block text-sm font-medium text-text-secondary mb-1">Image URL</label>
                                     <input type="url" id="slot-map-link" class="form-input" placeholder="https://i.hizliresim.com/...">
                                     
-                                    <button class="btn-primary w-full py-2 rounded-lg font-bold mt-4">Save Link</button>
+                                    <button onclick="App.admin.saveMapLink(${event.id})" class="btn-primary w-full py-2 rounded-lg font-bold mt-4">Save Link</button>
                                 </div>
                                 
                                 <div class="card p-6">
                                     <h3 class="text-xl font-bold text-white mb-4">Manage Zones</h3>
                                     <p class="text-sm text-text-secondary mb-4">Add parking zones and set their VTC capacity.</p>
-                                    <form class="flex gap-2">
+                                    <form class="flex gap-2" onsubmit="App.admin.addZone(event, ${event.id}); return false;">
                                         <input type="text" id="zone-name" placeholder="Zone Name (e.g., Main Lot)" class="form-input w-2/3">
                                         <input type="number" id="zone-capacity" placeholder="Cap." class="form-input w-1/3" min="1" value="10">
                                         <button type="submit" class="btn-primary px-4 rounded-lg font-bold">Add</button>
                                     </form>
                                     
                                     <div id="zone-list" class="mt-4 space-y-2">
-                                        <p class="text-text-secondary text-sm">No zones added yet.</p>
+                                        <p class="text-text-secondary text-sm">Loading zones...</p>
                                     </div>
                                 </div>
                             </div>
+                            
+                            <script>
+                                setTimeout(() => App.admin.loadConvoyConfig(${event.id}), 50);
+                            </script>
                         `;
                      }
                      
@@ -890,8 +891,174 @@
              },
             
             // ========================================================
+            // !!! YENİ ADMİN KONTROL OB JECT'İ !!!
+            // (Slot haritası ve bölge ekleme/silme)
+            // ========================================================
+            admin: {
+                // Helper: Bir konvoy için veritabanında ayar (config) var mı diye bakar, yoksa oluşturur.
+                async getOrCreateConfig(tmpConvoyId) {
+                    // 1. Mevcut config'i ara
+                    let { data, error } = await _supabase
+                        .from('convoy_configs')
+                        .select('id')
+                        .eq('tmp_convoy_id', tmpConvoyId)
+                        .single();
+                    
+                    if (data) {
+                        return data.id; // Bulundu, ID'sini yolla
+                    }
+                    
+                    // 2. Bulunamadı, yeni bir config oluştur
+                    let { data: newConfig, error: insertError } = await _supabase
+                        .from('convoy_configs')
+                        .insert({ tmp_convoy_id: tmpConvoyId })
+                        .select('id')
+                        .single();
+                        
+                    if (insertError) {
+                        console.error("Error creating convoy config:", insertError.message);
+                        return null;
+                    }
+                    
+                    return newConfig.id; // Yeni config'in ID'sini yolla
+                },
+                
+                // Admin modalı açıldığında mevcut bölgeleri ve linki yükler
+                async loadConvoyConfig(tmpConvoyId) {
+                    const list = document.getElementById('zone-list');
+                    const linkInput = document.getElementById('slot-map-link');
+                    if (!list || !linkInput) return;
+                    
+                    list.innerHTML = `<p class="text-text-secondary text-sm">Loading zones...</p>`;
+                    
+                    let { data, error } = await _supabase
+                        .from('convoy_configs')
+                        .select('id, slot_map_image_url, convoy_zones (id, zone_name, capacity)')
+                        .eq('tmp_convoy_id', tmpConvoyId)
+                        .single();
+                        
+                    if (error || !data) {
+                        list.innerHTML = `<p class="text-text-secondary text-sm">No config found. Add zones to create one.</p>`;
+                        return;
+                    }
+                    
+                    // Mevcut harita linkini input'a yaz
+                    linkInput.value = data.slot_map_image_url || '';
+                    
+                    // Mevcut bölgeleri (zones) listele
+                    if (!data.convoy_zones || data.convoy_zones.length === 0) {
+                        list.innerHTML = `<p class="text-text-secondary text-sm">No zones added yet.</p>`;
+                        return;
+                    }
+                    
+                    list.innerHTML = data.convoy_zones.map(zone => {
+                        return `
+                            <div class="flex justify-between items-center bg-bg-primary p-2 rounded">
+                                <span class="text-text-primary">${zone.zone_name} (Cap: ${zone.capacity})</span>
+                                <button onclick="App.admin.deleteZone(${zone.id}, ${tmpConvoyId})" class="text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    }).join('');
+                },
+                
+                // Resim linkini kaydeder
+                async saveMapLink(tmpConvoyId) {
+                    const link = document.getElementById('slot-map-link').value;
+                    const msgEl = document.getElementById('admin-message');
+                    
+                    const configId = await this.getOrCreateConfig(tmpConvoyId);
+                    if (!configId) {
+                        msgEl.textContent = 'Error: Could not get convoy config.';
+                        msgEl.style.display = 'block';
+                        return;
+                    }
+                    
+                    const { error } = await _supabase
+                        .from('convoy_configs')
+                        .update({ slot_map_image_url: link })
+                        .eq('id', configId);
+                        
+                    if (error) {
+                        msgEl.textContent = `Error: ${error.message}`;
+                        msgEl.style.display = 'block';
+                    } else {
+                        msgEl.textContent = 'Map link saved!';
+                        msgEl.style.display = 'block';
+                        msgEl.classList.remove('text-red-400', 'bg-red-500/10');
+                        msgEl.classList.add('text-green-400', 'bg-green-500/10');
+                    }
+                },
+                
+                // Yeni bölge (zone) ekler
+                async addZone(event, tmpConvoyId) {
+                    event.preventDefault();
+                    const msgEl = document.getElementById('admin-message');
+                    const nameInput = document.getElementById('zone-name');
+                    const capacityInput = document.getElementById('zone-capacity');
+                    
+                    const zoneName = nameInput.value;
+                    const capacity = parseInt(capacityInput.value);
+                    
+                    if (!zoneName || !capacity || capacity < 1) {
+                        msgEl.textContent = 'Please enter a valid zone name and capacity.';
+                        msgEl.style.display = 'block';
+                        return;
+                    }
+                    
+                    const configId = await this.getOrCreateConfig(tmpConvoyId);
+                    if (!configId) {
+                        msgEl.textContent = 'Error: Could not get convoy config.';
+                        msgEl.style.display = 'block';
+                        return;
+                    }
+
+                    const { error } = await _supabase
+                        .from('convoy_zones')
+                        .insert({
+                            config_id: configId,
+                            zone_name: zoneName,
+                            capacity: capacity
+                        });
+                        
+                    if (error) {
+                         msgEl.textContent = `Error: ${error.message}`;
+                         msgEl.style.display = 'block';
+                    } else {
+                        msgEl.textContent = 'Zone added successfully!';
+                        msgEl.style.display = 'block';
+                        msgEl.classList.remove('text-red-400', 'bg-red-500/10');
+                        msgEl.classList.add('text-green-400', 'bg-green-500/10');
+                        
+                        // Formu temizle ve listeyi yenile
+                        nameInput.value = '';
+                        capacityInput.value = '10';
+                        this.loadConvoyConfig(tmpConvoyId);
+                    }
+                },
+                
+                // Bölge (zone) siler
+                async deleteZone(zoneId, tmpConvoyId) {
+                    if (!confirm('Are you sure you want to delete this zone? This will remove all VTCs booked in it.')) {
+                        return;
+                    }
+                    
+                    const { error } = await _supabase
+                        .from('convoy_zones')
+                        .delete()
+                        .eq('id', zoneId);
+                        
+                    if (error) {
+                        alert(`Error deleting zone: ${error.message}`);
+                    } else {
+                        this.loadConvoyConfig(tmpConvoyId); // Listeyi yenile
+                    }
+                }
+            },
+            
+            // ========================================================
             // !!! TAMAMEN GÜNCELLENMİŞ AUTH BÖLÜMÜ !!!
-            // (SQL Trigger'sız, Sadece Google ile)
             // ========================================================
             auth: {
                 init() {
@@ -904,9 +1071,14 @@
                             App.state.currentUser = null;
                             App.state.isAdmin = false;
                         }
-                        this.updateUI();
+                        
+                        // 1. Arayüzü (Admin linki vb.) GÜNCELLE
+                        this.updateUI(); 
+                        
+                        // 2. Arayüz güncellendikten SONRA API verilerini ÇEK
+                        // Bu, "F5 atınca admin paneli kayboluyor" sorununu çözer
+                        App.fetchAndRenderAllData(); 
 
-                        // !!! GOOGLE YÖNLENDİRME DÜZELTMESİ !!!
                         if (event === 'SIGNED_IN') {
                             App.modals.close('auth');
                             if (window.location.hash.includes('access_token')) {
@@ -922,7 +1094,7 @@
                         // RLS KAPALI olduğu için bu sorgu artık %100 çalışacaktır.
                         let { data: profile, error } = await _supabase
                             .from('profiles')
-                            .select('id, username, vtc_name, role') // ID'yi de seç
+                            .select('id, username, vtc_name, role') 
                             .eq('id', user.id)
                             .single();
                             
@@ -938,12 +1110,12 @@
                                     username: user.user_metadata?.full_name || user.email.split('@')[0],
                                     vtc_name: 'N/A' // Google kullanıcısının VTC'si bilinmiyor
                                 })
-                                .select('id, username, vtc_name, role') // Eklenen veriyi geri çek
+                                .select('id, username, vtc_name, role')
                                 .single();
                                 
                             if(insertError) {
                                 console.error("Error creating profile:", insertError.message);
-                                App.state.currentUser = user; // Profilsiz devam et
+                                App.state.currentUser = user; 
                             } else {
                                 App.state.currentUser = { ...user, ...newProfile };
                                 App.state.isAdmin = (newProfile.role === 'admin');
@@ -966,15 +1138,13 @@
                     this.updateUI(); // Profil çekildikten sonra UI'ı son kez güncelle
                 },
                 
-                // signUp fonksiyonu artık JavaScript tarafında manuel olarak profil oluşturuyor
+                // Artık sadece Google ile giriş var, bu fonksiyon gereksiz
                 async signUp(event) {
                     event.preventDefault();
-                    // ... (Bu fonksiyon e-posta/şifre kaldırıldığı için artık çağrılmayacak)
-                    // ... (Ama bir hata oluşmaması için burada bırakıyoruz)
                     console.warn("Email sign up is disabled.");
                 },
                 
-                // signIn fonksiyonu da e-posta/şifre kaldırıldığı için artık çağrılmayacak
+                // Artık sadece Google ile giriş var, bu fonksiyon gereksiz
                 async signIn(event) {
                     if (event) event.preventDefault();
                     console.warn("Email sign in is disabled.");
@@ -1030,8 +1200,6 @@
                     }
 
                     if (user) {
-                        // Giriş yapılmış
-                        // Profil 'username'i varsa onu, yoksa e-postayı göster
                         const displayName = user.username || (user.email ? user.email.split('@')[0] : 'User');
                         welcomeMsg.textContent = `Welcome, ${displayName}`;
                         userInfo.style.display = 'flex';
@@ -1042,7 +1210,6 @@
                         authButtonsMobile.style.display = 'none';
                         
                     } else {
-                        // Giriş yapılmamış
                         userInfo.style.display = 'none';
                         authButtons.style.display = 'block';
                         
@@ -1052,14 +1219,8 @@
                 },
                 
                 // Artık kullanılmıyor
-                showTab(tabName) {
-                   console.log("showTab is disabled.");
-                },
-                
-                // Artık kullanılmıyor
-                togglePasswordVisibility(fieldId, icon) {
-                    console.log("togglePassword is disabled.");
-                }
+                showTab(tabName) {},
+                togglePasswordVisibility(fieldId, icon) {}
             },
             
             language: {
